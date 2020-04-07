@@ -8,7 +8,8 @@ verify_ssl = true
 [packages]
 django = "==3.0"
 whitenoise = "==5.0"
-mysqlclient = "*"
+mysqlclient = "==1.4"
+gunicorn = "==20.0"
 
 [requires]
 python_version = "3.7"
