@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import (
     BaseUserManager, AbstractBaseUser
 )
+from rest_framework import serializers
 
 class UserManager(BaseUserManager):
     def create_user(self, email, password=None):
@@ -97,3 +98,9 @@ class User(AbstractBaseUser):
     def is_active(self):
         "Is the user active?"
         return self.active
+
+
+class UserSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = User
+        fields = ['email', 'active', 'staff', 'admin']

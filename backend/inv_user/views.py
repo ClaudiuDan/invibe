@@ -1,6 +1,11 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, get_user_model, login, logout
 from .forms import LoginForm, RegisterForm
+from .models import UserSerializer
+from rest_framework import viewsets
+from rest_framework import permissions
+
+User = get_user_model()
 
 # Create your views here
 def login_view(request):
@@ -44,3 +49,12 @@ def register_view(request):
 def logout_view(request):
     logout(request)
     return redirect('/')
+
+#API endpoints
+class UserViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows users to be viewed or edited.
+    """
+    queryset = User.objects.all().order_by('email')
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
