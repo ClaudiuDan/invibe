@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import axios from 'axios';
-import {connect, Provider} from 'react-redux'
+import {Provider} from 'react-redux'
 import store from './code/redux/Store'
 import Main from "./Main";
 
@@ -16,7 +16,7 @@ class App extends Component {
     render() {
         return (
             <Provider store={store}>
-                <Main/>
+                <Main />
             </Provider>
         )
     }

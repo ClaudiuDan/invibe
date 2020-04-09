@@ -5,7 +5,7 @@ import rootReducer from './reducers';
 const initialState = {
     auth:
         {
-            isLoading: false,
+            isLoading: true,
             userToken: null,
         },
 };

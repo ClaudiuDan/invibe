@@ -1,23 +1,36 @@
 import React, {Component} from 'react';
 import {NavigationContainer} from "@react-navigation/native";
-import {ChatsScreen, HomeScreen, LoginScreen, ProfileScreen, SettingsScreen} from "./code/screens/exports";
+import {ChatsScreen, HomeScreen, LoginScreen, ProfileScreen, SettingsScreen, RegisterScreen} from "./code/screens/exports";
 import {connect} from "react-redux";
 import {createStackNavigator} from "@react-navigation/stack";
-import {Text} from "react-native-reanimated";
+import {Text} from "react-native";
+import {restoreToken} from "./code/redux/actions/AuthAction";
 
 
 class Main extends Component {
+
+    componentDidMount() {
+        this.props.restoreToken();
+    }
+
     render () {
         if (this.props.isLoading) {
             // We haven't finished checking for the token yet
-            return (<Text>Loading</Text>);
+            return (
+                <Text style={{fontSize: 64}}
+                    textAlign={'center'}>
+                        Loading
+                </Text>);
         }
         const Stack = createStackNavigator();
         return (
             <NavigationContainer>
                 <Stack.Navigator>
                     {this.props.userToken == null ? (
-                        <Stack.Screen name="Login" component={LoginScreen}/>
+                        <>
+                            <Stack.Screen name="Login" component={LoginScreen}/>
+                            <Stack.Screen name="Register" component={RegisterScreen}/>
+                        </>
                     ) : (
                         <>
                             <Stack.Screen
@@ -40,5 +53,6 @@ class Main extends Component {
 const mapStateToProps = state => ({
     isLoading: state.auth.isLoading,
     userToken: state.auth.userToken,
-})
-export default connect(mapStateToProps, {})(Main);
+});
+
+export default connect(mapStateToProps, {restoreToken})(Main);

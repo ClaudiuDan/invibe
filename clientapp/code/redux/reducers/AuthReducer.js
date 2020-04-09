@@ -6,12 +6,21 @@ function authReducer(state = {}, action) {
             return {
                 ...state,
                 userToken: action.payload.token,
-            }
+            };
+
         case SIGN_OUT:
             return {
                 ...state,
                 userToken: null,
-            }
+            };
+
+        case RESTORE_TOKEN:
+            return {
+                ...state,
+                userToken: action.payload.token,
+                isLoading: false,
+            };
+
         default:
             return state;
     }

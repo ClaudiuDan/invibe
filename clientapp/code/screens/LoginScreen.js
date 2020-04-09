@@ -1,13 +1,13 @@
 import React, { Component } from 'react';
 import {
     ScrollView,
-    Text,
     TextInput,
     View,
     Button
 } from 'react-native';
 import {connect} from 'react-redux';
 import {signIn} from "../redux/actions/AuthAction";
+import {Text} from "react-native";
 
 class LoginScreen extends Component {
 
@@ -46,8 +46,12 @@ class LoginScreen extends Component {
         <View style={{margin:7}} />
           <Button
             onPress={this.handleRequest.bind(this)}
-            title="Submit"
+            title="Login"
           />
+          <Text style={{color: 'blue', fontSize: 17}}
+                onPress={() => this.props.navigation.navigate('Register')}>
+              Register
+          </Text>
       </ScrollView>
     )
   }
