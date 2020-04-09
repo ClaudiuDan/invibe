@@ -19,7 +19,7 @@ export function HomeScreen({navigation}) {
       </View>
     );
   }
-  
+
   // const styles = StyleSheet.create({
   //   container: {
   //     flex: 1,
@@ -28,4 +28,3 @@ export function HomeScreen({navigation}) {
   //     justifyContent: 'center',
   //   },
   // });
-  
