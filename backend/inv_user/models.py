@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import (
     BaseUserManager, AbstractBaseUser
 )
+from django.contrib.auth.models import update_last_login
 from rest_framework import serializers
 
 class UserManager(BaseUserManager):
@@ -18,6 +19,7 @@ class UserManager(BaseUserManager):
 
         user.set_password(password)
         user.save(using=self._db)
+        update_last_login(None, user)
         return user
 
     def create_staffuser(self, email, password):
@@ -71,17 +73,15 @@ class User(AbstractBaseUser):
         # The user is identified by their email address
         return self.email
 
-    def __str__(self):              # __unicode__ on Python 2
+    def __str__(self):
         return self.email
 
     def has_perm(self, perm, obj=None):
         "Does the user have a specific permission?"
-        # Simplest possible answer: Yes, always
         return True
 
     def has_module_perms(self, app_label):
         "Does the user have permissions to view the app `app_label`?"
-        # Simplest possible answer: Yes, always
         return True
 
     @property
@@ -100,7 +100,9 @@ class User(AbstractBaseUser):
         return self.active
 
 
-class UserSerializer(serializers.HyperlinkedModelSerializer):
+class InvUserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = User
-        fields = ['email', 'active', 'staff', 'admin']
+        fields = ['email', 'password']
+    def create(self, validated_data):
+        return self.Meta.model.objects.create_user(**validated_data)
