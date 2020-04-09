@@ -7,6 +7,7 @@ export const signIn = (email, password) => dispatch => {
     axios
         .post(`/auth/login/`, {username: email, password: password})
         .then(response => {
+            console.log(response.data)
             const {token, user} = response.data;
 
             // We set the returned token as the default authorization header

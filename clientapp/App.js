@@ -10,6 +10,7 @@ class App extends Component {
         super(props)
 
         axios.defaults.baseURL = 'https://invibes.herokuapp.com/';
+        axios.defaults.xsrfHeaderName = "X-CSRFToken";
         axios.defaults.timeout = 1500;
     }
 
