@@ -7,8 +7,14 @@ function authReducer(state = {}, action) {
                 ...state,
                 userToken: action.payload.token,
             }
+        case SIGN_OUT:
+            return {
+                ...state,
+                userToken: null,
+            }
         default:
             return state;
     }
 }
+
 export default authReducer

@@ -21,3 +21,15 @@ export const signIn = (email, password) => dispatch => {
         })
         .catch(error => console.log(error));
 }
+
+export const signOut = () => dispatch => {
+    axios
+        .get(`/auth/logout/`)
+        .then(response => {
+            console.log(response)
+            dispatch({
+                type: SIGN_OUT,
+            })
+        })
+        .catch(error => console.log(error));
+}
