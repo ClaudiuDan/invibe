@@ -6,8 +6,8 @@ import {
     View,
     Button
 } from 'react-native';
-import axios from 'axios';
-import { useNavigation } from '@react-navigation/native';
+import {connect} from 'react-redux';
+import {signIn} from "../redux/actions/AuthAction";
 
 class LoginScreen extends Component {
 
@@ -29,20 +29,7 @@ class LoginScreen extends Component {
  }
 
  handleRequest = () => {
-   axios
-    .post(`/auth/login/`, {username: this.state.email, password: this.state.password } )
-    .then(response => {
-      const { token, user } = response.data;
-
-      // We set the returned token as the default authorization header
-      axios.defaults.headers.common.Authorization = `Token ${token}`;
-
-      // Navigate to the home screen
-      console.log(token)
-      // navigation.navigate('Home');
-      // const navigation = useNavigation();
-    })
-    .catch(error => console.log(error));
+      this.props.signIn(this.state.email, this.state.password);
   }
 
   render() {
@@ -66,7 +53,7 @@ class LoginScreen extends Component {
   }
 }
 
-export default LoginScreen;
+export default connect(null, {signIn})(LoginScreen);
 
 // const LOGIN_REQ_LINK = "https://google.com";
 // const OK_STATUS = 200
