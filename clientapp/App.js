@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import axios from 'axios';
+import Axios from 'axios';
 import {Provider} from 'react-redux'
 import store from './code/redux/Store'
 import Main from "./Main";
@@ -9,9 +9,10 @@ class App extends Component {
     constructor(props) {
         super(props)
 
-        axios.defaults.baseURL = 'https://invibes.herokuapp.com/';
-        axios.defaults.xsrfHeaderName = "X-CSRFToken";
-        axios.defaults.timeout = 1500;
+        Axios.defaults.baseURL = 'https://invibes.herokuapp.com/';
+        Axios.defaults.xsrfHeaderName = "x-csrftoken";
+        Axios.defaults.xsrfCookieName = "XSRF-TOKEN";
+        Axios.defaults.timeout = 1500;
     }
 
     render() {
