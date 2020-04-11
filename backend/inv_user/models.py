@@ -4,6 +4,9 @@ from django.contrib.auth.models import (
 )
 from django.contrib.auth.models import update_last_login
 from rest_framework import serializers
+from django.core import exceptions
+import django.contrib.auth.password_validation as validators
+
 
 class UserManager(BaseUserManager):
     def create_user(self, email, password=None):
@@ -47,6 +50,7 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
+
 class User(AbstractBaseUser):
     objects = UserManager()
     email = models.EmailField(
@@ -55,12 +59,12 @@ class User(AbstractBaseUser):
         unique=True,
     )
     active = models.BooleanField(default=True)
-    staff = models.BooleanField(default=False) # a admin user; non super-user
-    admin = models.BooleanField(default=False) # a superuser
+    staff = models.BooleanField(default=False)  # a admin user; non super-user
+    admin = models.BooleanField(default=False)  # a superuser
     # notice the absence of a "Password field", that is built in.
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = [] # Email & Password are required by default.
+    REQUIRED_FIELDS = []  # Email & Password are required by default.
 
     class Meta:
         db_table = 'inv_user'
@@ -104,5 +108,28 @@ class InvUserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = User
         fields = ['email', 'password']
+
     def create(self, validated_data):
         return self.Meta.model.objects.create_user(**validated_data)
+
+    def validate(self, data):
+        # here data has all the fields which have validated values
+        # so we can create a User instance out of it
+        user = User(**data)
+
+        # get the password from the data
+        password = data.get('password')
+
+        errors = dict()
+        try:
+            # validate the password and catch the exception
+            validators.validate_password(password=password, user=User)
+
+        # the exception raised here is different than serializers.ValidationError
+        except exceptions.ValidationError as e:
+            errors['password'] = list(e.messages)
+
+        if errors:
+            raise serializers.ValidationError(errors)
+
+        return super(InvUserSerializer, self).validate(data)

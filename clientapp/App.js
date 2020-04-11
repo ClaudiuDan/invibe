@@ -7,7 +7,7 @@ import Main from "./Main";
 class App extends Component {
 
     constructor(props) {
-        super(props)
+        super(props);
 
         Axios.defaults.baseURL = 'https://invibes.herokuapp.com/';
         Axios.defaults.xsrfHeaderName = "x-csrftoken";

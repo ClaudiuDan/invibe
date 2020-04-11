@@ -33,6 +33,7 @@ ALLOWED_HOSTS = [".herokuapp.com", "127.0.0.1", "localhost"]
 # Application definition
 
 INSTALLED_APPS = [
+    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -40,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'inv_user',
+    'chat',
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
@@ -85,6 +87,16 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'invibe.wsgi.application'
+ASGI_APPLICATION = "chat.routing.application"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [os.environ.get('REDIS_URL', 'redis://localhost:6379')],
+        },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
