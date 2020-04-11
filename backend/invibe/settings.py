@@ -87,7 +87,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'invibe.wsgi.application'
-ASGI_APPLICATION = "chat.routing.application"
+ASGI_APPLICATION = "invibe.routing.application"
 
 CHANNEL_LAYERS = {
     "default": {
