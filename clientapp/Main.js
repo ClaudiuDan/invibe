@@ -10,6 +10,8 @@ import {restoreToken} from "./code/redux/actions/AuthAction";
 class Main extends Component {
 
     componentDidMount() {
+        this.setState({ userToken: null });
+        this.setState({ isLoading: false});
         this.props.restoreToken();
     }
 

@@ -51,6 +51,31 @@ export const register = (email, password) => dispatch => {
         .catch(error => console.log(error));
 };
 
+
+export const socialRegister = (token) => dispatch => {
+    Axios
+        // o sa schimbam asta :)) cand avem partea de backend
+        .post(`/auth/register/`, {email: "pula@yahoo.com", password: "alaba213321la"})
+        .then(response => {
+            console.log("aici");
+            const {token, user} = response.data;
+            
+            Axios.defaults.headers.common.Authorization = `Token ${token}`;
+
+            SecureStore.setItemAsync('userToken', token)
+                .catch((err => console.log("Could not save the auth token.", err)));
+
+            dispatch({
+                type: SIGN_IN,
+                payload: {
+                    token: token,
+                    user: user,
+                }
+            })
+        })
+        .catch(error => console.log("eroare"));
+};
+
 export const signOut = () => dispatch => {
     Axios
         .get(`/auth/logout/`)
