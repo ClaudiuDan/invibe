@@ -8,33 +8,36 @@ import {
     TextInput,
     TouchableHighlight,
 } from 'react-native';
+import Axios from "axios";
 
 //used to make random-sized messages
 function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+const URL = 'wss://https://invibes.herokuapp.com/chat/';
+const AUTH =  'authorization: ' + Axios.defaults.headers.common.Authorization;
+
 // The actual chat view itself- a ScrollView of BubbleMessages, with an InputBar at the bottom, which moves with the keyboard
 export default class ChatView extends Component {
 
     constructor(props) {
         super(props);
-
-        var dummyText = 'Departure so attention pronounce satisfied daughters am. But shy tedious pressed studied opinion entered windows off. ' +
+        const dummyText = 'Departure so attention pronounce satisfied daughters am. But shy tedious pressed studied opinion entered windows off. ' +
             'Advantage dependent suspicion convinced provision him yet. Timed balls match at by rooms we. Fat not boy neat left had with past here call.' +
             ' Court nay merit few nor party learn. Why our year her eyes know even how. Mr immediate remaining conveying allowance do or. ';
 
         //create a set number of texts with random lengths. Also randomly put them on the right (user) or left (other person).
-        var numberOfMessages = 20;
+        const numberOfMessages = 20;
 
-        var messages = [];
+        const messages = [];
 
-        for (var i = 0; i < numberOfMessages; i++) {
-            var messageLength = getRandomInt(10, 120);
+        for (let i = 0; i < numberOfMessages; i++) {
+            const messageLength = getRandomInt(10, 120);
 
-            var direction = getRandomInt(1, 2) === 1 ? 'right' : 'left';
+            const direction = getRandomInt(1, 2) === 1 ? 'right' : 'left';
 
-            var message = dummyText.substring(0, messageLength);
+            const message = dummyText.substring(0, messageLength);
 
             messages.push({
                 direction: direction,
@@ -44,7 +47,12 @@ export default class ChatView extends Component {
 
         this.state = {
             messages: messages,
-            inputBarText: ''
+            inputBarText: '',
+            ws: new WebSocket(URL, {
+                headers: {
+                    authorization:  Axios.defaults.headers.common.Authorization,
+                }
+            }),
         }
     }
 
@@ -65,6 +73,27 @@ export default class ChatView extends Component {
 
     //scroll to bottom when first showing the view
     componentDidMount() {
+
+        this.state.ws.onopen = () => {
+            // on connecting, do nothing but log it to the console
+            console.log('connected')
+        };
+
+        this.state.ws.onmessage = evt => {
+            // on receiving a message, add it to the list of messages
+            const message = JSON.parse(evt.data);
+            console.log("Received message" + message);
+            // this.addMessage(message)
+        };
+
+        this.state.ws.onclose = () => {
+            console.log('disconnected');
+            // automatically try to reconnect on connection loss
+            this.setState({
+                ws: new WebSocket(URL, AUTH),
+            })
+        };
+
         setTimeout(function () {
             this.scrollView.scrollToEnd();
         }.bind(this))
@@ -79,10 +108,12 @@ export default class ChatView extends Component {
     }
 
     _sendMessage() {
-        this.state.messages.push({direction: "right", text: this.state.inputBarText});
+        const message = this.state.inputBarText;
+        this.state.messages.push({direction: "right", text: message});
+        this.state.ws.send(JSON.stringify({text: message, receiver: this.props.userId}));
 
         this.setState({
-            messages: this.state.messages,
+            messages: message,
             inputBarText: ''
         });
 
@@ -107,7 +138,7 @@ export default class ChatView extends Component {
 
     render() {
 
-        var messages = [];
+        const messages = [];
 
         this.state.messages.forEach(function (message, index) {
             messages.push(

@@ -14,6 +14,7 @@ class U2UChatScreen extends Component {
         console.log(this.state.userId)
         return (
             <ChatView
+                userId={this.props.route.params.userId}
             />
         );
     }
