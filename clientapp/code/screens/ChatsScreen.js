@@ -54,7 +54,7 @@ class ChatsScreen extends Component {
                                         }}
                                         onPress={() => {
                                             this.setModalVisible(!modalVisible);
-                                            this.props.navigation.navigate('U2UChat', {userId: this.state.userId});
+                                            this.props.navigation.navigate('Chat', {userId: this.state.userId});
                                         }}
                                     >
                                         <Text style={styles.textStyle}>Go</Text>

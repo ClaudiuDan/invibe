@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {Text} from 'react-native'
+import ChatView from "../chat/ChatInput";
 
 class U2UChatScreen extends Component {
     constructor(props) {
@@ -13,7 +13,8 @@ class U2UChatScreen extends Component {
     render() {
         console.log(this.state.userId)
         return (
-            <Text> {this.state.userId}</Text>
+            <ChatView
+            />
         );
     }
 }

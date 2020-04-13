@@ -50,7 +50,7 @@ class Main extends Component {
                             />
                             <Stack.Screen name="Profile" component={ProfileScreen}/>
                             <Stack.Screen name="Chats" component={ChatsScreen}/>
-                            <Stack.Screen name="U2UChat" component={U2UChatScreen}/>
+                            <Stack.Screen name="Chat" component={U2UChatScreen}  options={({ route }) => ({ title: 'Chat with user ' + route.params.userId })}/>
                             <Stack.Screen name="Settings" component={SettingsScreen}/>
                         </>
                     )}

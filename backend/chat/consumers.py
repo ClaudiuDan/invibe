@@ -1,5 +1,9 @@
 import json
 from channels.generic.websocket import WebsocketConsumer
+from django.utils import timezone
+
+from inv_user.models import User
+from .models import Message
 
 
 class ChatConsumer(WebsocketConsumer):
@@ -10,13 +14,26 @@ class ChatConsumer(WebsocketConsumer):
         pass
 
     # Receive message from WebSocket
-    def receive(self, text_data):
-        print(text_data)
-        text_data_json = json.loads(text_data)
-        message = text_data_json['message']
+    def receive(self, data):
+        new_message = Message.objects.create(
+            text=data['text'],
+            datetime=timezone.now(),
+            sender=self.scope["user"],
+            receiver=User.objects.get(pk=data['receiver'])
+        )
+        new_message.save()
 
-        print(message)
+        print(data['text'])
 
-        self.send(text_data=json.dumps({
-            'message': message
-        }))
+        broadcast = {
+            'type': 'new_message',
+            'author': self.scope["user"].get_full_name(),
+            'text': data['text']
+        }
+
+        reply = {
+            'type': 'message_echo',
+            'recipient': data['receiver'],
+            'text': data['text']
+        }
+        return broadcast, reply
