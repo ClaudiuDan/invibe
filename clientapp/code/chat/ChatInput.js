@@ -8,21 +8,33 @@ import {
     TextInput,
     TouchableHighlight,
 } from 'react-native';
-import Axios from "axios";
+import Axios from 'axios';
+import update from 'immutability-helper';
+import moment from 'moment';
+import * as SecureStore from "expo-secure-store";
+import {SIGN_IN} from "../redux/actions/Types";
 
-//used to make random-sized messages
-function getRandomInt(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-const URL = 'wss://https://invibes.herokuapp.com/chat/';
-const AUTH =  'authorization: ' + Axios.defaults.headers.common.Authorization;
+const URL = 'wss://invibes.herokuapp.com/chat/';
+const AUTH = 'authorization: ' + Axios.defaults.headers.common.Authorization;
 
 // The actual chat view itself- a ScrollView of BubbleMessages, with an InputBar at the bottom, which moves with the keyboard
 export default class ChatView extends Component {
 
     constructor(props) {
         super(props);
+
+        this.state = {
+            messages: [],
+            inputBarText: '',
+            ws: this.createWebSocket(),
+        }
+    }
+
+    getRandomInt = (min, max) => {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    };
+
+    createDummyMessages = () => {
         const dummyText = 'Departure so attention pronounce satisfied daughters am. But shy tedious pressed studied opinion entered windows off. ' +
             'Advantage dependent suspicion convinced provision him yet. Timed balls match at by rooms we. Fat not boy neat left had with past here call.' +
             ' Court nay merit few nor party learn. Why our year her eyes know even how. Mr immediate remaining conveying allowance do or. ';
@@ -33,66 +45,136 @@ export default class ChatView extends Component {
         const messages = [];
 
         for (let i = 0; i < numberOfMessages; i++) {
-            const messageLength = getRandomInt(10, 120);
+            const messageLength = this.getRandomInt(10, 120);
 
-            const direction = getRandomInt(1, 2) === 1 ? 'right' : 'left';
+            const direction = this.getRandomInt(1, 2) === 1 ? 'right' : 'left';
 
             const message = dummyText.substring(0, messageLength);
 
             messages.push({
                 direction: direction,
-                text: message
+                text: message,
+                datetime: new Date('April 04, 2013 22:30:00'),
+                sent: true,
+                id: this.getRandomInt(1000, 10000),
+                frontend_id: 0,
             })
         }
+        return messages;
+    };
 
-        this.state = {
-            messages: messages,
-            inputBarText: '',
-            ws: new WebSocket(URL, {
-                headers: {
-                    authorization:  Axios.defaults.headers.common.Authorization,
+    parseISOString = (s) => {
+        const b = s.split(/\D+/);
+        return new Date(Date.UTC(b[0], --b[1], b[2], b[3], b[4], b[5], b[6]));
+    };
+
+    createWebSocket = () => {
+        const ws = new WebSocket(URL);
+
+        ws.onopen = () => {
+            console.log('onopen');
+
+            const handshake = {
+                type: 'handshake',
+                receiver: this.props.userId,
+                token: Axios.defaults.headers.common.Authorization.split(' ')[1],
+            };
+
+            ws.send(JSON.stringify(handshake));
+        };
+
+        ws.onmessage = (message) => {
+            const messageData = JSON.parse(message.data);
+            if (messageData.type === 'message_echo') {
+                let i = this.state.messages.length - 1;
+                while (i >= 0 && this.state.messages[i].frontend_id !== messageData.frontend_id) {
+                    i--;
                 }
-            }),
-        }
-    }
+                if (i >= 0) {
+                    this.setState({
+                        messages: update(this.state.messages, {
+                            [i]: {
+                                datetime: {$set: this.parseISOString(messageData.datetime)},
+                                sent: {$set: true},
+                                id: {$set: messageData.id}
+                            }
+                        })
+                    });
+                }
+            } else if (messageData.type === 'new_message') {
+                console.log("new_mess");
+                this.setState(prevState => ({
+                    messages: [...prevState.messages,
+                        {
+                            direction: "left",
+                            text: messageData.text,
+                            datetime: this.parseISOString(messageData.datetime),
+                            sent: false,
+                            frontend_id: messageData.frontend_id,
+                            id: messageData.id
+                        }]
+                }));
+            }
+        };
+
+        ws.onclose = (reason) => {
+            console.log('onclose');
+            console.log(reason);
+
+            setTimeout(() => this.setState({
+                ws: this.createWebSocket(),
+            }), 3000);
+        };
+
+        return ws;
+    };
 
     static navigationOptions = {
         title: 'Chat',
     };
 
-    //When the keyboard appears, this gets the ScrollView to move the end back "up" so the last message is visible with the keyboard up
-    //Without this, whatever message is the keyboard's height from the bottom will look like the last message.
-    keyboardDidShow(e) {
-        this.scrollView.scrollToEnd();
-    }
 
-    //When the keyboard dissapears, this gets the ScrollView to move the last message back down.
-    keyboardDidHide(e) {
-        this.scrollView.scrollToEnd();
-    }
-
-    //scroll to bottom when first showing the view
+    // Scroll to bottom when first showing the view
     componentDidMount() {
 
-        this.state.ws.onopen = () => {
-            // on connecting, do nothing but log it to the console
-            console.log('connected')
-        };
-
-        this.state.ws.onmessage = evt => {
-            // on receiving a message, add it to the list of messages
-            const message = JSON.parse(evt.data);
-            console.log("Received message" + message);
-            // this.addMessage(message)
-        };
-
-        this.state.ws.onclose = () => {
-            console.log('disconnected');
-            // automatically try to reconnect on connection loss
-            this.setState({
-                ws: new WebSocket(URL, AUTH),
+        Axios
+            .get(`/chat/get_chat/`, {params: {receiver: this.props.userId}})
+            .then(response => {
+                const messages = JSON.parse(response.data).messages;
+                const new_messages = [];
+                const userId = this.props.userId;
+                messages
+                    .forEach(message => {
+                        if (message.sender == userId) {
+                            console.log("here")
+                            new_messages.push(
+                                {
+                                    direction: "left",
+                                    text: message.text,
+                                    datetime: this.parseISOString(message.datetime),
+                                    sent: false,
+                                    frontend_id: message.frontend_id,
+                                    id: message.id
+                                }
+                            )
+                        } else {
+                            new_messages.push(
+                                {
+                                    direction: "right",
+                                    text: message.text,
+                                    datetime: this.parseISOString(message.datetime),
+                                    sent: true,
+                                    frontend_id: message.frontend_id,
+                                    id: message.id
+                                }
+                            )
+                        }
+                    })
+                this.setState({
+                    messages: new_messages
+                })
             })
-        };
+            .catch(error => console.log(error));
 
         setTimeout(function () {
             this.scrollView.scrollToEnd();
@@ -107,13 +189,41 @@ export default class ChatView extends Component {
         }.bind(this))
     }
 
+    genFrontendId = (length) => {
+        let result = '';
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        for (let i = 0; i < length; i++) {
+            result += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        return result;
+    };
+
+
     _sendMessage() {
         const message = this.state.inputBarText;
-        this.state.messages.push({direction: "right", text: message});
-        this.state.ws.send(JSON.stringify({text: message, receiver: this.props.userId}));
+        const frontend_id = this.genFrontendId(64);
+
+        this.setState(prevState => ({
+            messages: [...prevState.messages,
+                {
+                    type: "message",
+                    direction: "right",
+                    text: message,
+                    datetime: new Date(Date.now()),
+                    sent: false,
+                    frontend_id: frontend_id,
+                    id: 0
+                }]
+        }));
+
+        this.state.ws.send(JSON.stringify({
+            type: 'message',
+            text: message,
+            receiver: this.props.userId,
+            frontend_id: frontend_id
+        }));
 
         this.setState({
-            messages: message,
             inputBarText: ''
         });
 
@@ -142,7 +252,8 @@ export default class ChatView extends Component {
 
         this.state.messages.forEach(function (message, index) {
             messages.push(
-                <MessageBubble key={index} direction={message.direction} text={message.text}/>
+                <MessageBubble key={index} direction={message.direction} text={message.text} datetime={message.datetime}
+                               sent={message.sent}/>
             );
         });
 
@@ -167,20 +278,28 @@ class MessageBubble extends Component {
     render() {
 
         //These spacers make the message bubble stay to the left or the right, depending on who is speaking, even if the message is multiple lines.
-        var leftSpacer = this.props.direction === 'left' ? null : <View style={{width: 70}}/>;
-        var rightSpacer = this.props.direction === 'left' ? <View style={{width: 70}}/> : null;
+        const leftSpacer = this.props.direction === 'left' ? null : <View style={{width: 70}}/>;
+        const rightSpacer = this.props.direction === 'left' ? <View style={{width: 70}}/> : null;
+        const sent = this.props.direction === 'left' ? '' : this.props.sent ? 'Sent' : 'Sending';
 
-        var bubbleStyles = this.props.direction === 'left' ? [styles.messageBubble, styles.messageBubbleLeft] : [styles.messageBubble, styles.messageBubbleRight];
+        const bubbleStyles = this.props.direction === 'left' ? [styles.messageBubble, styles.messageBubbleLeft] : [styles.messageBubble, styles.messageBubbleRight];
 
-        var bubbleTextStyle = this.props.direction === 'left' ? styles.messageBubbleTextLeft : styles.messageBubbleTextRight;
+        const bubbleTextStyle = this.props.direction === 'left' ? styles.messageBubbleTextLeft : styles.messageBubbleTextRight;
+        const bubbleTextDate = this.props.direction === 'left' ? {color: '#3a3a3a'} : {color: '#d8d6d3'};
 
         return (
             <View style={{justifyContent: 'space-between', flexDirection: 'row'}}>
                 {leftSpacer}
                 <View style={bubbleStyles}>
-                    <Text style={bubbleTextStyle}>
-                        {this.props.text}
-                    </Text>
+                    <View>
+                        <Text style={bubbleTextStyle}>
+                            {this.props.text}
+                            {/*{this.props.datetime.getHours() + ':' + this.props.datetime.getMinutes()}*/}
+                        </Text>
+                        <Text style={{...bubbleTextDate, textAlign: 'left'}}>
+                            {this.props.datetime.getHours() + ':' + this.props.datetime.getMinutes() + ' ' + sent}
+                        </Text>
+                    </View>
                 </View>
                 {rightSpacer}
             </View>
