@@ -59,4 +59,15 @@ class GetChatsAPIView(APIView):
 
         new_chat.save()
 
-        return Response(status=status.HTTP_201_CREATED)
+        return Response(json.dumps({"id": new_chat.pk, "receiver": request.data['receiver']}),
+                        status=status.HTTP_201_CREATED)
+
+    def delete(self, request):
+
+        chat = Chat.objects.get(pk=self.request.query_params.get('id'))
+
+        if request.user.pk == chat.owner.pk:
+            chat.delete()
+            return Response(status=status.HTTP_200_OK)
+
+        return Response({"Only the owner can delete this"}, status=status.HTTP_406_NOT_ACCEPTABLE)

@@ -30,3 +30,6 @@ class Chat(models.Model):
 
     class Meta:
         db_table = 'chats'
+        constraints = [
+            models.UniqueConstraint(fields=['owner', 'receiver'], name='unique_chat')
+        ]

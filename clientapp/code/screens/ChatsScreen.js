@@ -11,6 +11,7 @@ import {
     TouchableWithoutFeedback
 } from "react-native";
 import Axios from "axios";
+import update from 'immutability-helper';
 
 
 class ChatsScreen extends Component {
@@ -29,7 +30,7 @@ class ChatsScreen extends Component {
         Axios
             .get(`/chat/active_chats/`)
             .then(response => {
-                const chats = []
+                const chats = [];
                 JSON.parse(response.data).chats
                     .forEach(chat => {
                         chats.push({
@@ -82,12 +83,17 @@ class ChatsScreen extends Component {
                                             this.setModalVisible(!modalVisible);
                                             Axios
                                                 .post(`/chat/active_chats/`, {receiver: this.state.userId})
+                                                .then(response => {
+                                                        const chat = JSON.parse(response.data);
+                                                        this.setState({
+                                                            chats: [...chats, {
+                                                                id: chat.id,
+                                                                receiver: chat.receiver,
+                                                            }]
+                                                        })
+                                                    }
+                                                )
                                                 .catch(error => console.log(error));
-                                            this.setState({
-                                                chats: [...chats, {
-                                                    receiver: this.state.userId
-                                                }]
-                                            });
                                             this.props.navigation.navigate('Chat', {userId: this.state.userId});
                                         }}
                                     >
@@ -118,18 +124,34 @@ class ChatsScreen extends Component {
                     }}
                 />
                 <ScrollView style={styles.scrollView}>
-                    {chats.map(chat => {
+                    {chats.map((chat, chatIndex) => {
                         return (
-                            <TouchableWithoutFeedback
-                                style={styles.chatTouchable}
-                                onPress={() => this.props.navigation.navigate('Chat', {userId: chat.receiver})}
-                            >
-                                <View style={styles.chatView}>
-                                    <Text style={styles.chatViewText}>
-                                        {"Chat with " + chat.receiver}
-                                    </Text>
-                                </View>
-                            </TouchableWithoutFeedback>
+                            <View style={styles.chatAndDeleteButton}>
+                                <TouchableWithoutFeedback
+                                    style={styles.chatTouchable}
+                                    onPress={() => this.props.navigation.navigate('Chat', {userId: chat.receiver})}
+                                    onLongPress={() => console.log("Long press")}
+                                >
+                                    <View style={styles.chatView}>
+                                        <Text style={styles.chatViewText}>
+                                            {"Chat with " + chat.receiver}
+                                        </Text>
+                                    </View>
+                                </TouchableWithoutFeedback>
+                                <TouchableWithoutFeedback
+                                    style={{backgroundColor: "#000"}}
+                                    onPress={() => {
+                                        this.setState({
+                                            chats: update(this.state.chats, {$splice: [[chatIndex, 1]]})
+                                        });
+
+                                        Axios
+                                            .delete(`/chat/active_chats/`, {params: {id: chat.id}})
+                                            .catch(error => console.log(error));
+                                    }}>
+                                    <Text style={{fontSize: 20}}> {"X"} </Text>
+                                </TouchableWithoutFeedback>
+                            </View>
                         )
                     })}
                 </ScrollView>
@@ -142,12 +164,18 @@ class ChatsScreen extends Component {
     }
 }
 
+//TODO: separate these out.
 const styles = StyleSheet.create({
     centeredView: {
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
         marginTop: 22
+    },
+
+    chatAndDeleteButton: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
     },
 
     modalView: {

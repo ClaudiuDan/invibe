@@ -10,9 +10,6 @@ import {
 } from 'react-native';
 import Axios from 'axios';
 import update from 'immutability-helper';
-import moment from 'moment';
-import * as SecureStore from "expo-secure-store";
-import {SIGN_IN} from "../redux/actions/Types";
 
 const URL = 'wss://invibes.herokuapp.com/chat/';
 const AUTH = 'authorization: ' + Axios.defaults.headers.common.Authorization;
@@ -30,10 +27,6 @@ export default class ChatView extends Component {
         }
     }
 
-    getRandomInt = (min, max) => {
-        return Math.floor(Math.random() * (max - min + 1)) + min;
-    };
-
     parseISOString = (s) => {
         const b = s.split(/\D+/);
         return new Date(Date.UTC(b[0], --b[1], b[2], b[3], b[4], b[5], b[6]));
@@ -43,8 +36,6 @@ export default class ChatView extends Component {
         const ws = new WebSocket(URL);
 
         ws.onopen = () => {
-            console.log('onopen');
-
             const handshake = {
                 type: 'handshake',
                 receiver: this.props.userId,
@@ -89,7 +80,6 @@ export default class ChatView extends Component {
         };
 
         ws.onclose = (reason) => {
-            console.log('onclose');
             console.log(reason);
 
             setTimeout(() => this.setState({
@@ -98,10 +88,6 @@ export default class ChatView extends Component {
         };
 
         return ws;
-    };
-
-    static navigationOptions = {
-        title: 'Chat',
     };
 
 
@@ -150,6 +136,10 @@ export default class ChatView extends Component {
         setTimeout(function () {
             this.scrollView.scrollToEnd();
         }.bind(this))
+    }
+
+    componentWillUnmount() {
+        this.state.ws.close();
     }
 
     //this is a bit sloppy: this is to make sure it scrolls to the bottom when a message is added, but
@@ -298,7 +288,7 @@ class InputBar extends Component {
     }
 }
 
-//TODO: separate these out. This is what happens when you're in a hurry!
+//TODO: separate these out.
 const styles = StyleSheet.create({
 
     //ChatView
