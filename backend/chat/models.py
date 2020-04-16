@@ -12,10 +12,21 @@ class Message(models.Model):
                             null=False,
                             blank=False)
     datetime = models.DateTimeField(_('message date time'))
-    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sender')
-    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='receiver')
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='message_sender')
+    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='message_receiver')
     is_seen = models.BooleanField(_('Is Message Seen'),
                                   default=False)
 
     def __str__(self):
         return self.text
+
+    class Meta:
+        db_table = 'messages'
+
+
+class Chat(models.Model):
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chat_owner')
+    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chat_receiver')
+
+    class Meta:
+        db_table = 'chats'

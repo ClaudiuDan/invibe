@@ -34,35 +34,6 @@ export default class ChatView extends Component {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     };
 
-    createDummyMessages = () => {
-        const dummyText = 'Departure so attention pronounce satisfied daughters am. But shy tedious pressed studied opinion entered windows off. ' +
-            'Advantage dependent suspicion convinced provision him yet. Timed balls match at by rooms we. Fat not boy neat left had with past here call.' +
-            ' Court nay merit few nor party learn. Why our year her eyes know even how. Mr immediate remaining conveying allowance do or. ';
-
-        //create a set number of texts with random lengths. Also randomly put them on the right (user) or left (other person).
-        const numberOfMessages = 20;
-
-        const messages = [];
-
-        for (let i = 0; i < numberOfMessages; i++) {
-            const messageLength = this.getRandomInt(10, 120);
-
-            const direction = this.getRandomInt(1, 2) === 1 ? 'right' : 'left';
-
-            const message = dummyText.substring(0, messageLength);
-
-            messages.push({
-                direction: direction,
-                text: message,
-                datetime: new Date('April 04, 2013 22:30:00'),
-                sent: true,
-                id: this.getRandomInt(1000, 10000),
-                frontend_id: 0,
-            })
-        }
-        return messages;
-    };
-
     parseISOString = (s) => {
         const b = s.split(/\D+/);
         return new Date(Date.UTC(b[0], --b[1], b[2], b[3], b[4], b[5], b[6]));

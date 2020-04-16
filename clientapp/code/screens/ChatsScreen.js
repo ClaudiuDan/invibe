@@ -10,14 +10,40 @@ import {
     ScrollView,
     TouchableWithoutFeedback
 } from "react-native";
+import Axios from "axios";
 
 
 class ChatsScreen extends Component {
 
-    state = {
-        modalVisible: false,
-        userId: '',
-    };
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            modalVisible: false,
+            userId: '',
+            chats: [],
+        }
+    }
+
+    componentDidMount() {
+        Axios
+            .get(`/chat/active_chats/`)
+            .then(response => {
+                const chats = []
+                JSON.parse(response.data).chats
+                    .forEach(chat => {
+                        chats.push({
+                            id: chat.id,
+                            receiver: chat.receiver
+                        })
+                    })
+
+                this.setState(
+                    {chats: chats}
+                )
+            })
+            .catch(error => console.log(error));
+    }
 
     setModalVisible = (visible) => {
         this.setState({modalVisible: visible});
@@ -28,7 +54,7 @@ class ChatsScreen extends Component {
     }
 
     render() {
-        const {modalVisible} = this.state;
+        const {modalVisible, chats} = this.state;
         return (
             <View>
                 <Modal
@@ -54,6 +80,14 @@ class ChatsScreen extends Component {
                                         }}
                                         onPress={() => {
                                             this.setModalVisible(!modalVisible);
+                                            Axios
+                                                .post(`/chat/active_chats/`, {receiver: this.state.userId})
+                                                .catch(error => console.log(error));
+                                            this.setState({
+                                                chats: [...chats, {
+                                                    receiver: this.state.userId
+                                                }]
+                                            });
                                             this.props.navigation.navigate('Chat', {userId: this.state.userId});
                                         }}
                                     >
@@ -83,6 +117,22 @@ class ChatsScreen extends Component {
                         this.setModalVisible(true);
                     }}
                 />
+                <ScrollView style={styles.scrollView}>
+                    {chats.map(chat => {
+                        return (
+                            <TouchableWithoutFeedback
+                                style={styles.chatTouchable}
+                                onPress={() => this.props.navigation.navigate('Chat', {userId: chat.receiver})}
+                            >
+                                <View style={styles.chatView}>
+                                    <Text style={styles.chatViewText}>
+                                        {"Chat with " + chat.receiver}
+                                    </Text>
+                                </View>
+                            </TouchableWithoutFeedback>
+                        )
+                    })}
+                </ScrollView>
                 <Button
                     title="Go back"
                     onPress={() => this.props.navigation.navigate('Home')}
@@ -135,6 +185,28 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         textAlign: "center"
     },
+
+    scrollView: {
+        margin: 20,
+        maxHeight: "60%",
+    },
+
+    chatView: {
+        flex: 1,
+        margin: 10,
+        alignItems: "center",
+        borderBottomWidth: 0.5,
+    },
+
+    chatTouchable: {
+        width: "100%",
+    },
+
+    chatViewText: {
+        flex: 1,
+        justifyContent: "center",
+        fontSize: 20,
+    }
 });
 
 export default ChatsScreen;

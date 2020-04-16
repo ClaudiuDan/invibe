@@ -9,7 +9,8 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
-from .models import Message
+from inv_user.forms import User
+from .models import Message, Chat
 
 
 class GetChatAPIView(APIView):
@@ -30,6 +31,32 @@ class GetChatAPIView(APIView):
                     "receiver": message.receiver.pk,
                     "sender": message.sender.pk
 
-                })
-        print(messages)
+                }
+            )
         return Response(json.dumps({"messages": messages}, cls=DjangoJSONEncoder), status=status.HTTP_200_OK)
+
+
+class GetChatsAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        query = Chat.objects.filter(owner=request.user.pk)
+        chats = []
+        for chat in query:
+            chats.append(
+                {
+                    "id": chat.pk,
+                    "receiver": chat.receiver.pk
+                }
+            )
+        return Response(json.dumps({"chats": chats}), status=status.HTTP_200_OK)
+
+    def post(self, request):
+        new_chat = Chat.objects.create(
+            owner=request.user,
+            receiver=User.objects.get(pk=request.data['receiver'])
+        )
+
+        new_chat.save()
+
+        return Response(status=status.HTTP_201_CREATED)
