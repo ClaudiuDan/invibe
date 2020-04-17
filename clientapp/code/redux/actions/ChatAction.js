@@ -77,7 +77,20 @@ export const deleteChat = (id) => dispatch => {
     Axios
         .delete(`/chat/active_chats/`, {params: {id: id}})
         .catch(error => console.log(error));
-    //TODO: delete from SecureStorage
+
+    SecureStore.getItemAsync('chatsList')
+        .then(chatList => {
+            const parsedChatList = JSON.parse(chatList);
+            const index = parsedChatList.findIndex(chat => chat.id.toString() === id.toString())
+            if (index !== -1) {
+                SecureStore
+                    .setItemAsync('chatList',
+                        JSON.stringify([...parsedChatList.slice(0, index), ...parsedChatList.slice(index + 1)]))
+                    .catch(err => console.log('Could not save the chat', err));
+            }
+        })
+        .catch(err => console.log('Could not get the chatList', err));
+
     dispatch({
         type: DELETE_CHAT,
         payload: {
@@ -103,7 +116,7 @@ export const restoreChat = (receiver) => dispatch => {
 };
 
 
-// TODO: Consider storing only the last n messages in the storage
+// TODO: Consider storing only the last n messages in the storage(Consider doing the same for the backend call)
 export const getChat = (receiver) => dispatch => {
     Axios
         .get(`/chat/get_chat/`, {params: {receiver: receiver}})
