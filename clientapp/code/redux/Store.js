@@ -11,7 +11,7 @@ const initialState = {
     chat: {
         chatsList: [],
         messages: {},
-        webSockets: {},
+        webSocket: null,
     }
 };
 

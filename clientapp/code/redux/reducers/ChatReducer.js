@@ -43,33 +43,36 @@ function chatReducer(state = {}, action) {
 
         case ADD_MESSAGE:
             receiver = action.payload.receiver;
+            const old_messages = receiver in state.messages ? state.messages[receiver] : [];
             return {
                 ...state,
                 messages: {
-                    [receiver]: [...state.messages[receiver], action.payload.message]
+                    ...state.messages,
+                    [receiver]: [...old_messages, action.payload.message]
                 }
             };
 
         case UPDATE_MESSAGE:
             receiver = action.payload.receiver;
             // TODO: Consider doing binary search if stored sorted by datetime
-            const messages = receiver in state.messages ? state.messages[receiver]: [];
+            // TODO: the frontend_id is not stored in the db in a persistent way, consider checking for id as well(maybe improve this design)
+            const messages = receiver in state.messages ? state.messages[receiver] : [];
             const message = action.payload.message;
             index = messages.findIndex((msg) => msg.frontend_id && msg.frontend_id.toString() === message.frontend_id.toString());
-            return {
-                ...state,
-                messages: {
-                    [receiver]: [...messages.slice(0, index), message, ...messages.slice(index + 1)]
-                }
-            };
-
+            if (index !== -1) {
+                return {
+                    ...state,
+                    messages: {
+                        ...state.messages,
+                        [receiver]: [...messages.slice(0, index), message, ...messages.slice(index + 1)]
+                    }
+                };
+            }
+            return state;
         case ADD_WEBSOCKET_CONNECTION:
             return {
                 ...state,
-                webSockets: {
-                    ...state.webSockets,
-                    [action.payload.receiver]: action.payload.ws,
-                }
+                webSocket: action.payload.ws,
             };
 
         default:

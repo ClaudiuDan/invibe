@@ -1,9 +1,9 @@
+//TODO: SecureStorage seems to have very tight memory limit => consider switching to AsyncStorage for messages
 import * as SecureStore from "expo-secure-store";
 import Axios from "axios";
 import {ADD_CHAT, ADD_MESSAGE, SET_CHAT, SET_CHATSLIST, UPDATE_MESSAGE} from "../actions/Types";
 import {ADD_WEBSOCKET_CONNECTION, DELETE_CHAT} from "./Types";
 import {parseISOString} from "../../Utils/Utils";
-
 
 const WebSocketURL = 'wss://invibes.herokuapp.com/chat/';
 
@@ -117,6 +117,7 @@ export const restoreChat = (receiver) => dispatch => {
 
 
 // TODO: Consider storing only the last n messages in the storage(Consider doing the same for the backend call)
+// TODO: Consider adding to the current list of chats(or updating it) instead of replacing it
 export const getChat = (receiver) => dispatch => {
     Axios
         .get(`/chat/get_chat/`, {params: {receiver: receiver}})
@@ -156,14 +157,14 @@ export const addMessage = (message, receiver) => dispatch => {
     })
 };
 
-export const openWebSocketForChat = (receiver) => dispatch => {
-    console.log("openwebsocketforchat", receiver)
+
+export const openWebSocketForChat = () => dispatch => {
+    console.log("openwebsocketforchat")
     const ws = new WebSocket(WebSocketURL);
 
     ws.onopen = () => {
         const handshake = {
             type: 'handshake',
-            receiver: receiver,
             token: Axios.defaults.headers.common.Authorization.split(' ')[1],
         };
 
@@ -173,8 +174,10 @@ export const openWebSocketForChat = (receiver) => dispatch => {
     ws.onmessage = (message) => {
         const messageData = JSON.parse(message.data);
         let new_message = {};
+        let receiver = '';
         if (messageData.type === 'message_echo') {
             new_message = messageFromHTTPData('right', messageData);
+            receiver = messageData.receiver.toString();
             dispatch({
                 type: UPDATE_MESSAGE,
                 payload: {
@@ -184,6 +187,8 @@ export const openWebSocketForChat = (receiver) => dispatch => {
             })
         } else if (messageData.type === 'new_message') {
             new_message = messageFromHTTPData('left', messageData);
+            receiver = messageData.sender.toString();
+            console.log("New message from ", receiver);
             dispatch({
                 type: ADD_MESSAGE,
                 payload: {
@@ -198,13 +203,12 @@ export const openWebSocketForChat = (receiver) => dispatch => {
 
     ws.onclose = (reason) => {
         console.log(reason);
-        setTimeout(() => openWebSocketForChat(receiver), 3000);
+        setTimeout(() => openWebSocketForChat(), 3000);
     };
 
     dispatch({
         type: ADD_WEBSOCKET_CONNECTION,
         payload: {
-            receiver: receiver,
             ws: ws
         }
     })

@@ -9,19 +9,14 @@ class HomeScreen extends Component {
         super(props);
 
         this.state = {
-            webSockets: {},
+            webSocket: null,
             chatsList: [],
         }
     }
 
     componentDidMount() {
         this.props.restoreChatsList();
-
-        setTimeout(() => this.state.chatsList.forEach(chat => {
-            if (!([chat.receiver.toString()] in this.state.webSockets)) {
-                this.props.openWebSocketForChat(chat.receiver.toString());
-            }
-        }), 500);
+        this.props.openWebSocketForChat();
     }
 
     render() {
@@ -45,7 +40,7 @@ class HomeScreen extends Component {
 }
 
 const mapStateToProps = state => ({
-    webSockets: state.chat.webSockets,
+    webSocket: state.chat.webSocket,
     chatsList: state.chat.chatsList,
 });
 

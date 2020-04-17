@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import {Keyboard, ScrollView, View,} from 'react-native';
 import {connect} from "react-redux";
-import {addMessage, getChat, openWebSocketForChat} from "../redux/actions/ChatAction";
+import {addMessage, getChat} from "../redux/actions/ChatAction";
 import {genFrontendId} from "../Utils/Utils";
 import {chatInputStyles} from "./styles/ChatInputStyles";
 import {MessageBubble} from "./MessageBubble";
@@ -15,18 +15,12 @@ class ChatView extends Component {
         const userId = this.props.userId.toString();
         this.state = {
             messages: userId in this.props.all_ms ? this.props.all_ms[userId] : [],
-            ws: userId in this.props.all_ws ? this.props.all_ws[userId] : null,
             inputBarText: '',
         }
     }
 
     componentDidMount() {
-
         this.props.getChat(this.props.userId.toString());
-
-        if (!this.state.ws) {
-            this.props.openWebSocketForChat(this.props.userId.toString());
-        }
 
         setTimeout(() => this.scrollView.scrollToEnd());
     }
@@ -34,7 +28,6 @@ class ChatView extends Component {
     static getDerivedStateFromProps(nextProps) {
         return {
             all_ms: nextProps.all_ms,
-            all_ws: nextProps.all_ws,
         }
     }
 
@@ -45,12 +38,6 @@ class ChatView extends Component {
                 messages: this.props.all_ms[userId],
             });
             setTimeout(() => this.scrollView.scrollToEnd(), 20);
-        }
-
-        if (userId in this.props.all_ws && this.props.all_ws[userId] !== this.state.ws) {
-            this.setState({
-                ws: this.props.all_ws[userId],
-            })
         }
     }
 
@@ -69,7 +56,7 @@ class ChatView extends Component {
             }, this.props.userId
         );
 
-        this.state.ws.send(JSON.stringify({
+        this.props.ws.send(JSON.stringify({
             type: 'message',
             text: message,
             receiver: this.props.userId,
@@ -132,9 +119,9 @@ class ChatView extends Component {
 
 const mapStateToProps = state => ({
     all_ms: state.chat.messages,
-    all_ws: state.chat.webSockets,
+    ws: state.chat.webSocket,
 });
 
 
-export default connect(mapStateToProps, {getChat, openWebSocketForChat, addMessage})(ChatView);
+export default connect(mapStateToProps, {getChat, addMessage})(ChatView);
 

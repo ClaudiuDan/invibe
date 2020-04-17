@@ -9,10 +9,6 @@ from rest_framework.authtoken.models import Token
 from .models import Message
 
 
-def group_name(u1, u2):
-    return "u1-" + str(u1) + "u2-" + str(u2)
-
-
 class ChatConsumer(WebsocketConsumer):
 
     def __init__(self, *args, **kwargs):
@@ -24,16 +20,18 @@ class ChatConsumer(WebsocketConsumer):
 
         if data['type'] == 'handshake':
             self.scope['user'] = Token.objects.get(key=data['token']).user
-            self._handshake(data)
+            self._handshake()
 
         elif data['type'] == 'message':
             replies = self._message(data)
 
-            async_to_sync(self.channel_layer.group_send)(group_name(data["receiver"], self.scope["user"].pk), {
+            # Broadcast - send to receiver
+            async_to_sync(self.channel_layer.group_send)(str(data["receiver"]), {
                 'type': 'new.message',
                 'text': json.dumps(replies[0])
             })
 
+            # Message echo - inform me the message was received by server
             self.send(json.dumps(replies[1]))
 
         elif data['type'] == 'messages_read':
@@ -42,11 +40,8 @@ class ChatConsumer(WebsocketConsumer):
     def new_message(self, message):
         self.send(message['text'])
 
-    def _handshake(self, data):
-        self.receiver = data["receiver"]
-        print(group_name(self.scope["user"].pk, data["receiver"]))
-        async_to_sync(self.channel_layer.group_add)(group_name(self.scope["user"].pk, data["receiver"]),
-                                                    self.channel_name)
+    def _handshake(self):
+        async_to_sync(self.channel_layer.group_add)(str(self.scope["user"].pk), self.channel_name)
 
     def _message(self, data):
 
@@ -63,6 +58,7 @@ class ChatConsumer(WebsocketConsumer):
         broadcast = {
             'type': 'new_message',
             'sender': self.scope["user"].pk,
+            'receiver': data['receiver'],
             'text': data['text'],
             'frontend_id': data['frontend_id'],
             'datetime': json.dumps(new_message.datetime, cls=DjangoJSONEncoder),
@@ -71,6 +67,7 @@ class ChatConsumer(WebsocketConsumer):
 
         reply = {
             'type': 'message_echo',
+            'sender': self.scope["user"].pk,
             'receiver': data['receiver'],
             'text': data['text'],
             'frontend_id': data['frontend_id'],
@@ -89,5 +86,4 @@ class ChatConsumer(WebsocketConsumer):
             message.save()
 
     def disconnect(self, close_code):
-        async_to_sync(self.channel_layer.group_discard)(group_name(self.scope["user"].pk, self.receiver),
-                                                        self.channel_name)
+        async_to_sync(self.channel_layer.group_discard)(str(self.scope["user"].pk), self.channel_name)

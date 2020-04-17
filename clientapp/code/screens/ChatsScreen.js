@@ -10,7 +10,7 @@ import {
     View
 } from "react-native";
 import {connect} from "react-redux";
-import {addChat, deleteChat, getChatsList, openWebSocketForChat} from "../redux/actions/ChatAction";
+import {addChat, deleteChat, getChatsList} from "../redux/actions/ChatAction";
 import {styles} from "../chat/styles/ChatsScreenStyles";
 
 
@@ -23,32 +23,23 @@ class ChatsScreen extends Component {
             modalVisible: false,
             userId: '',
             chatsList: [],
-            webSockets: {},
         }
     }
 
     componentDidMount() {
         this.props.getChatsList();
-
-        setTimeout(() => this.state.chatsList.forEach(chat => {
-            if (!([chat.receiver.toString()] in this.state.webSockets)) {
-                this.props.openWebSocketForChat(chat.receiver.toString());
-            }
-        }), 500);
     }
 
     static getDerivedStateFromProps(nextProps) {
         return {
             chatsList: nextProps.chatsList,
-            webSockets: nextProps.webSockets,
         }
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (this.props.chatsList !== this.state.chatsList || this.props.webSockets !== this.state.webSockets) {
+        if (this.props.chatsList !== this.state.chatsList) {
             this.setState({
                 chatsList: this.props.chatsList,
-                webSockets: this.props.webSockets,
             })
         }
     }
@@ -156,7 +147,7 @@ class ChatsScreen extends Component {
 
 const mapStateToProps = state => ({
     chatsList: state.chat.chatsList,
-    webSockets: state.chat.webSockets,
+    ws: state.chat.webSocket,
 });
 
-export default connect(mapStateToProps, {getChatsList, addChat, deleteChat, openWebSocketForChat})(ChatsScreen);
+export default connect(mapStateToProps, {getChatsList, addChat, deleteChat})(ChatsScreen);
