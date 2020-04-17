@@ -109,6 +109,7 @@ DATABASES = {
         'PASSWORD': os.environ['DB_PASS'],
         'HOST': os.environ['DB_HOST'],
         'PORT': '3306',
+        'OPTIONS': {'charset': 'utf8mb4'},
     }
 }
 

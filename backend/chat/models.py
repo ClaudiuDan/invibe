@@ -14,7 +14,7 @@ class Message(models.Model):
     datetime = models.DateTimeField(_('message date time'))
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='message_sender')
     receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='message_receiver')
-    is_seen = models.BooleanField(_('Is Message Seen'),
+    is_seen = models.BooleanField(_('Was Message Seen'),
                                   default=False)
 
     def __str__(self):
