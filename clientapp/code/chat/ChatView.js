@@ -1,0 +1,140 @@
+import React, {Component} from 'react';
+import {Keyboard, ScrollView, View,} from 'react-native';
+import {connect} from "react-redux";
+import {addMessage, getChat, openWebSocketForChat} from "../redux/actions/ChatAction";
+import {genFrontendId} from "../Utils/Utils";
+import {chatInputStyles} from "./styles/ChatInputStyles";
+import {MessageBubble} from "./MessageBubble";
+import {InputBar} from "./ChatInputBar";
+
+class ChatView extends Component {
+
+    constructor(props) {
+        super(props);
+
+        const userId = this.props.userId.toString();
+        this.state = {
+            messages: userId in this.props.all_ms ? this.props.all_ms[userId] : [],
+            ws: userId in this.props.all_ws ? this.props.all_ws[userId] : null,
+            inputBarText: '',
+        }
+    }
+
+    componentDidMount() {
+
+        this.props.getChat(this.props.userId.toString());
+
+        if (!this.state.ws) {
+            this.props.openWebSocketForChat(this.props.userId.toString());
+        }
+
+        setTimeout(() => this.scrollView.scrollToEnd());
+    }
+
+    static getDerivedStateFromProps(nextProps) {
+        return {
+            all_ms: nextProps.all_ms,
+            all_ws: nextProps.all_ws,
+        }
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        const userId = this.props.userId.toString();
+        if (userId in this.props.all_ms && this.props.all_ms[userId] !== this.state.messages) {
+            this.setState({
+                messages: this.props.all_ms[userId],
+            });
+            setTimeout(() => this.scrollView.scrollToEnd(), 20);
+        }
+
+        if (userId in this.props.all_ws && this.props.all_ws[userId] !== this.state.ws) {
+            this.setState({
+                ws: this.props.all_ws[userId],
+            })
+        }
+    }
+
+    _sendMessage() {
+        const message = this.state.inputBarText;
+        const frontend_id = genFrontendId(64);
+
+        this.props.addMessage(
+            {
+                direction: "right",
+                text: message,
+                datetime: new Date(Date.now()),
+                sent: false,
+                frontend_id: frontend_id,
+                id: 0
+            }, this.props.userId
+        );
+
+        this.state.ws.send(JSON.stringify({
+            type: 'message',
+            text: message,
+            receiver: this.props.userId,
+            frontend_id: frontend_id
+        }));
+
+        this.setState({
+            inputBarText: ''
+        });
+
+        Keyboard.dismiss()
+    }
+
+    _onChangeInputBarText(text) {
+        this.setState({
+            inputBarText: text
+        });
+    }
+
+    //This event fires way too often.
+    //We need to move the last message up if the input bar expands due to the user's new message exceeding the height of the box.
+    //We really only need to do anything when the height of the InputBar changes, but AutogrowInput can't tell us that.
+    //The real solution here is probably a fork of AutogrowInput that can provide this information.
+    _onInputSizeChange() {
+        setTimeout(() => this.scrollView.scrollToEnd({animated: false}));
+    }
+
+    render() {
+
+        const messages = [];
+
+        this.state.messages.forEach((message, index) => {
+            messages.push(
+                <MessageBubble key={index}
+                               direction={message.direction}
+                               text={message.text}
+                               datetime={message.datetime}
+                               sent={message.sent}/>
+            );
+        });
+
+        return (
+            <View style={chatInputStyles.outer}>
+                <ScrollView
+                    ref={(ref) => {
+                        this.scrollView = ref
+                    }}
+                    style={chatInputStyles.messages}>
+                    {messages}
+                </ScrollView>
+                <InputBar onSendPressed={() => this._sendMessage()}
+                          onSizeChange={() => this._onInputSizeChange()}
+                          onChangeText={(text) => this._onChangeInputBarText(text)}
+                          text={this.state.inputBarText}/>
+            </View>
+        );
+    }
+}
+
+
+const mapStateToProps = state => ({
+    all_ms: state.chat.messages,
+    all_ws: state.chat.webSockets,
+});
+
+
+export default connect(mapStateToProps, {getChat, openWebSocketForChat, addMessage})(ChatView);
+

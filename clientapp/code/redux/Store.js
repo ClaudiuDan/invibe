@@ -8,6 +8,11 @@ const initialState = {
             isLoading: true,
             userToken: null,
         },
+    chat: {
+        chatsList: [],
+        messages: {},
+        webSockets: {},
+    }
 };
 
 const middleware = [thunk];

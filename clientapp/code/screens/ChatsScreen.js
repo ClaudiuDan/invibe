@@ -1,17 +1,17 @@
 import React, {Component} from 'react';
 import {
     Button,
-    View,
     Modal,
-    TouchableHighlight,
-    Text,
-    StyleSheet,
-    TextInput,
     ScrollView,
-    TouchableWithoutFeedback
+    Text,
+    TextInput,
+    TouchableHighlight,
+    TouchableWithoutFeedback,
+    View
 } from "react-native";
-import Axios from "axios";
-import update from 'immutability-helper';
+import {connect} from "react-redux";
+import {addChat, deleteChat, getChatsList, openWebSocketForChat} from "../redux/actions/ChatAction";
+import {styles} from "../chat/styles/ChatsScreenStyles";
 
 
 class ChatsScreen extends Component {
@@ -22,28 +22,35 @@ class ChatsScreen extends Component {
         this.state = {
             modalVisible: false,
             userId: '',
-            chats: [],
+            chatsList: [],
+            webSockets: {},
         }
     }
 
     componentDidMount() {
-        Axios
-            .get(`/chat/active_chats/`)
-            .then(response => {
-                const chats = [];
-                JSON.parse(response.data).chats
-                    .forEach(chat => {
-                        chats.push({
-                            id: chat.id,
-                            receiver: chat.receiver
-                        })
-                    })
+        this.props.getChatsList();
 
-                this.setState(
-                    {chats: chats}
-                )
+        setTimeout(() => this.state.chatsList.forEach(chat => {
+            if (!([chat.receiver.toString()] in this.state.webSockets)) {
+                this.props.openWebSocketForChat(chat.receiver.toString());
+            }
+        }), 500);
+    }
+
+    static getDerivedStateFromProps(nextProps) {
+        return {
+            chatsList: nextProps.chatsList,
+            webSockets: nextProps.webSockets,
+        }
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        if (this.props.chatsList !== this.state.chatsList || this.props.webSockets !== this.state.webSockets) {
+            this.setState({
+                chatsList: this.props.chatsList,
+                webSockets: this.props.webSockets,
             })
-            .catch(error => console.log(error));
+        }
     }
 
     setModalVisible = (visible) => {
@@ -55,68 +62,10 @@ class ChatsScreen extends Component {
     }
 
     render() {
-        const {modalVisible, chats} = this.state;
+        const {modalVisible, chatsList} = this.state;
         return (
             <View>
-                <Modal
-                    animationType="slide"
-                    transparent={true}
-                    visible={modalVisible}
-                >
-                    <TouchableWithoutFeedback onPress={() => this.setModalVisible(!modalVisible)}>
-                        <View style={styles.centeredView}>
-                            <View style={styles.modalView}>
-                                <TextInput
-                                    style={styles.modalText}
-                                    placeholder='User Id'
-                                    onChangeText={this.onUserIdChanged.bind(this)}
-                                />
-                                <View style={{flexDirection: "row", justifyContent: 'space-between'}}>
-                                    <TouchableHighlight
-                                        style={{
-                                            ...styles.openButton,
-                                            backgroundColor: "#2196F3",
-                                            margin: 10,
-                                            width: '30%'
-                                        }}
-                                        onPress={() => {
-                                            this.setModalVisible(!modalVisible);
-                                            Axios
-                                                .post(`/chat/active_chats/`, {receiver: this.state.userId})
-                                                .then(response => {
-                                                        const chat = JSON.parse(response.data);
-                                                        this.setState({
-                                                            chats: [...chats, {
-                                                                id: chat.id,
-                                                                receiver: chat.receiver,
-                                                            }]
-                                                        })
-                                                    }
-                                                )
-                                                .catch(error => console.log(error));
-                                            this.props.navigation.navigate('Chat', {userId: this.state.userId});
-                                        }}
-                                    >
-                                        <Text style={styles.textStyle}>Go</Text>
-                                    </TouchableHighlight>
-                                    <TouchableHighlight
-                                        style={{
-                                            ...styles.openButton,
-                                            backgroundColor: "#2196F3",
-                                            margin: 10,
-                                            width: '30%'
-                                        }}
-                                        onPress={() => {
-                                            this.setModalVisible(!modalVisible);
-                                        }}
-                                    >
-                                        <Text style={styles.textStyle}>Hide</Text>
-                                    </TouchableHighlight>
-                                </View>
-                            </View>
-                        </View>
-                    </TouchableWithoutFeedback>
-                </Modal>
+                {this.getModalView(modalVisible)}
                 <Button
                     title="New chat"
                     onPress={() => {
@@ -124,13 +73,12 @@ class ChatsScreen extends Component {
                     }}
                 />
                 <ScrollView style={styles.scrollView}>
-                    {chats.map((chat, chatIndex) => {
+                    {chatsList.map((chat) => {
                         return (
-                            <View style={styles.chatAndDeleteButton}>
+                            <View style={styles.chatAndDeleteButton} key={chat.id}>
                                 <TouchableWithoutFeedback
                                     style={styles.chatTouchable}
                                     onPress={() => this.props.navigation.navigate('Chat', {userId: chat.receiver})}
-                                    onLongPress={() => console.log("Long press")}
                                 >
                                     <View style={styles.chatView}>
                                         <Text style={styles.chatViewText}>
@@ -140,15 +88,7 @@ class ChatsScreen extends Component {
                                 </TouchableWithoutFeedback>
                                 <TouchableWithoutFeedback
                                     style={{backgroundColor: "#000"}}
-                                    onPress={() => {
-                                        this.setState({
-                                            chats: update(this.state.chats, {$splice: [[chatIndex, 1]]})
-                                        });
-
-                                        Axios
-                                            .delete(`/chat/active_chats/`, {params: {id: chat.id}})
-                                            .catch(error => console.log(error));
-                                    }}>
+                                    onPress={() => this.props.deleteChat(chat.id)}>
                                     <Text style={{fontSize: 20}}> {"X"} </Text>
                                 </TouchableWithoutFeedback>
                             </View>
@@ -162,79 +102,61 @@ class ChatsScreen extends Component {
             </View>
         );
     }
+
+    // Shows the new chat dialog
+    getModalView(modalVisible) {
+        return <Modal
+            animationType="slide"
+            transparent={true}
+            visible={modalVisible}>
+            <TouchableWithoutFeedback onPress={() => this.setModalVisible(!modalVisible)}>
+                <View style={styles.centeredView}>
+                    <View style={styles.modalView}>
+                        <TextInput
+                            style={styles.modalText}
+                            placeholder='User Id'
+                            onChangeText={this.onUserIdChanged.bind(this)}
+                        />
+                        <View style={{flexDirection: "row", justifyContent: 'space-between'}}>
+                            <TouchableHighlight
+                                style={{
+                                    ...styles.openButton,
+                                    backgroundColor: "#2196F3",
+                                    margin: 10,
+                                    width: '30%'
+                                }}
+                                onPress={() => {
+                                    this.setModalVisible(!modalVisible);
+                                    this.props.addChat(this.state.userId);
+                                    this.props.navigation.navigate('Chat', {userId: this.state.userId});
+                                }}
+                            >
+                                <Text style={styles.textStyle}>Go</Text>
+                            </TouchableHighlight>
+                            <TouchableHighlight
+                                style={{
+                                    ...styles.openButton,
+                                    backgroundColor: "#2196F3",
+                                    margin: 10,
+                                    width: '30%'
+                                }}
+                                onPress={() => {
+                                    this.setModalVisible(!modalVisible);
+                                }}
+                            >
+                                <Text style={styles.textStyle}>Hide</Text>
+                            </TouchableHighlight>
+                        </View>
+                    </View>
+                </View>
+            </TouchableWithoutFeedback>
+        </Modal>;
+    }
 }
 
-//TODO: separate these out.
-const styles = StyleSheet.create({
-    centeredView: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        marginTop: 22
-    },
-
-    chatAndDeleteButton: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-
-    modalView: {
-        margin: 20,
-        backgroundColor: "white",
-        borderRadius: 20,
-        padding: 35,
-        alignItems: "center",
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5
-    },
-
-    openButton: {
-        backgroundColor: "#F194FF",
-        borderRadius: 20,
-        padding: 10,
-        elevation: 2
-    },
-
-    modalText: {
-        marginBottom: 15,
-        fontSize: 25,
-        textAlign: "center"
-    },
-
-    textStyle: {
-        color: "white",
-        fontSize: 20,
-        fontWeight: "bold",
-        textAlign: "center"
-    },
-
-    scrollView: {
-        margin: 20,
-        maxHeight: "60%",
-    },
-
-    chatView: {
-        flex: 1,
-        margin: 10,
-        alignItems: "center",
-        borderBottomWidth: 0.5,
-    },
-
-    chatTouchable: {
-        width: "100%",
-    },
-
-    chatViewText: {
-        flex: 1,
-        justifyContent: "center",
-        fontSize: 20,
-    }
+const mapStateToProps = state => ({
+    chatsList: state.chat.chatsList,
+    webSockets: state.chat.webSockets,
 });
 
-export default ChatsScreen;
+export default connect(mapStateToProps, {getChatsList, addChat, deleteChat, openWebSocketForChat})(ChatsScreen);

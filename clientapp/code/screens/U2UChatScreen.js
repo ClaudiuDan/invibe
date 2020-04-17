@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import ChatView from "../chat/ChatInput";
+import ChatView from "../chat/ChatView";
 
 class U2UChatScreen extends Component {
     constructor(props) {
@@ -11,7 +11,6 @@ class U2UChatScreen extends Component {
     }
 
     render() {
-        console.log(this.state.userId)
         return (
             <ChatView
                 userId={this.props.route.params.userId}

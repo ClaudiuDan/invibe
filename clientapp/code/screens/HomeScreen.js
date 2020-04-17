@@ -1,30 +1,52 @@
-import * as React from 'react';
-import { Button, View } from "react-native";
+import React, {Component} from 'react';
+import {Button, View} from "react-native";
+import {connect} from "react-redux";
+import {openWebSocketForChat, restoreChatsList} from "../redux/actions/ChatAction";
 
-export function HomeScreen({navigation}) {
-    return (
-      <View>
-        <Button
-          title="Go to Profile"
-          onPress={() => navigation.navigate('Profile')}
-        />
-        <Button
-          title="Go to Settings"
-          onPress={() => navigation.navigate('Settings')}
-        />
-        <Button
-          title="Go to Chats"
-          onPress={() => navigation.navigate('Chats')}
-        />
-      </View>
-    );
-  }
+class HomeScreen extends Component {
 
-  // const styles = StyleSheet.create({
-  //   container: {
-  //     flex: 1,
-  //     backgroundColor: '#fff',
-  //     alignItems: 'center',
-  //     justifyContent: 'center',
-  //   },
-  // });
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            webSockets: {},
+            chatsList: [],
+        }
+    }
+
+    componentDidMount() {
+        this.props.restoreChatsList();
+
+        setTimeout(() => this.state.chatsList.forEach(chat => {
+            if (!([chat.receiver.toString()] in this.state.webSockets)) {
+                this.props.openWebSocketForChat(chat.receiver.toString());
+            }
+        }), 500);
+    }
+
+    render() {
+        return (
+            <View>
+                <Button
+                    title="Go to Profile"
+                    onPress={() => this.props.navigation.navigate('Profile')}
+                />
+                <Button
+                    title="Go to Settings"
+                    onPress={() => this.props.navigation.navigate('Settings')}
+                />
+                <Button
+                    title="Go to Chats"
+                    onPress={() => this.props.navigation.navigate('Chats')}
+                />
+            </View>
+        );
+    }
+}
+
+const mapStateToProps = state => ({
+    webSockets: state.chat.webSockets,
+    chatsList: state.chat.chatsList,
+});
+
+export default connect(mapStateToProps, {restoreChatsList, openWebSocketForChat})(HomeScreen);
