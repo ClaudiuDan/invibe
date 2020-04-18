@@ -27,10 +27,13 @@ function chatReducer(state = {}, action) {
         case DELETE_CHAT:
             const chatsList = state.chatsList;
             index = chatsList.findIndex(chat => chat.id.toString() === action.payload.id.toString());
-            return {
-                ...state,
-                chatsList: [...chatsList.slice(0, index), ...chatsList.slice(index + 1)]
-            };
+            if (index !== -1) {
+                return {
+                    ...state,
+                    chatsList: [...chatsList.slice(0, index), ...chatsList.slice(index + 1)]
+                };
+            }
+            return state;
 
         case SET_CHAT:
             return {
