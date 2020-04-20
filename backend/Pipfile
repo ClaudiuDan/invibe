@@ -6,7 +6,7 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-django = "==3.0"
+django = "==2.2"
 whitenoise = "==5.0"
 mysqlclient = "==1.4"
 gunicorn = "==20.0"
@@ -18,7 +18,7 @@ twisted = {extras = ["http2", "tls"],version = "==20.3"}
 tabulator = "==1.38.2"
 daphne = "==2.4.1"
 django-rest-auth = "==0.9.5"
-django-allauth = "==0.32.0"
+django-allauth = "==0.38"
 
 [requires]
 python_version = "3.7.5"

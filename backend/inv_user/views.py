@@ -43,7 +43,8 @@ class CreateInvUserAPIView(CreateAPIView):
             status=status.HTTP_201_CREATED,
             headers=headers
         )
-        
+
+
 class FacebookLogin(SocialLoginView):
     adapter_class = FacebookOAuth2Adapter
 
