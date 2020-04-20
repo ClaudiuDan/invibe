@@ -1,5 +1,5 @@
-from django.conf.urls import url
-from inv_user.views import CreateInvUserAPIView, LogoutInvUserAPIView, LoginInvUserAPIView
+from django.conf.urls import url, include
+from inv_user.views import CreateInvUserAPIView, LogoutInvUserAPIView, LoginInvUserAPIView, FacebookLogin
 
 
 urlpatterns = [
@@ -11,5 +11,7 @@ urlpatterns = [
         name='auth_user_create'),
     url(r'logout/$',
         LogoutInvUserAPIView.as_view(),
-        name='auth_user_logout')
+        name='auth_user_logout'),
+    url(r'^rest-auth/', include('rest_auth.urls')),
+    url(r'^rest-auth/facebook/$', FacebookLogin.as_view(), name='fb_login'),
 ]

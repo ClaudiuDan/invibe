@@ -8,8 +8,10 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
-
+from allauth.socialaccount.providers.facebook.views import FacebookOAuth2Adapter
+from rest_auth.registration.views import SocialLoginView
 User = get_user_model()
+
 
 
 # Create your views here
@@ -41,7 +43,18 @@ class CreateInvUserAPIView(CreateAPIView):
             status=status.HTTP_201_CREATED,
             headers=headers
         )
+        
+class FacebookLogin(SocialLoginView):
+    adapter_class = FacebookOAuth2Adapter
 
+    def post(self, request, *args, **kwargs):
+        result = super().post(request)
+        print(result.data)
+        token = Token.objects.get(key=result.data['key'])
+        print(token)
+        return result
+
+    
 
 class LogoutInvUserAPIView(APIView):
     queryset = get_user_model().objects.all()
