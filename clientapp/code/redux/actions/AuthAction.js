@@ -53,21 +53,20 @@ export const register = (email, password) => dispatch => {
 
 
 export const socialRegister = (token) => dispatch => {
-    console.log("in socialRegister")
     Axios
         .post(`/auth/rest-auth/facebook/`, {access_token: token})
         .then(response => {
-            console.log("aici");
-            const {token, user} = response.data;
-            Axios.defaults.headers.common.Authorization = `Token ${token}`;
+            // USER DOESN T EXIST HERE?
+            const {key, user} = response.data;
+            Axios.defaults.headers.common.Authorization = `Token ${key}`;
 
-            SecureStore.setItemAsync('userToken', token)
+            SecureStore.setItemAsync('userToken', key)
                 .catch((err => console.log("Could not save the auth token.", err)));
 
             dispatch({
                 type: SIGN_IN,
                 payload: {
-                    token: token,
+                    token: key,
                     user: user,
                 }
             })
