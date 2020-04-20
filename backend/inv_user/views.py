@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from allauth.socialaccount.providers.facebook.views import FacebookOAuth2Adapter
-from rest_auth.registration.views import SocialLoginView
+from rest_auth.registration.views import SocialLoginView, SocialConnectView
 User = get_user_model()
 
 
@@ -55,7 +55,8 @@ class FacebookLogin(SocialLoginView):
         print(token)
         return result
 
-    
+class FacebookConnect(SocialConnectView):
+    adapter_class = FacebookOAuth2Adapter    
 
 class LogoutInvUserAPIView(APIView):
     queryset = get_user_model().objects.all()

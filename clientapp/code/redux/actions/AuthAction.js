@@ -53,13 +53,12 @@ export const register = (email, password) => dispatch => {
 
 
 export const socialRegister = (token) => dispatch => {
+    console.log("in socialRegister")
     Axios
-        // o sa schimbam asta :)) cand avem partea de backend
-        .post(`/auth/register/`, {email: "pula@yahoo.com", password: "alaba213321la"})
+        .post(`/auth/rest-auth/facebook/`, {access_token: token})
         .then(response => {
             console.log("aici");
             const {token, user} = response.data;
-            
             Axios.defaults.headers.common.Authorization = `Token ${token}`;
 
             SecureStore.setItemAsync('userToken', token)
@@ -73,7 +72,7 @@ export const socialRegister = (token) => dispatch => {
                 }
             })
         })
-        .catch(error => console.log("eroare"));
+        .catch(error => console.log(error));
 };
 
 export const signOut = () => dispatch => {

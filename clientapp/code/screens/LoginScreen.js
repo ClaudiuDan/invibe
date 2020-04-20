@@ -54,14 +54,13 @@ class LoginScreen extends Component {
         token,
         expires
       } = await Facebook.logInWithReadPermissionsAsync({
-        permissions: ['public_profile'],
+        permissions: ['public_profile', 'email'],
       });
       if (type === 'success') {
+        console.log(token);
         // Get the user's name using Facebook's Graph API
         const response = await fetch(`https://graph.facebook.com/me?access_token=${token}`);
-        // this.setState({ token: token });
         this.handleSocialRequest();
-        console.log(token)
         Alert.alert('Logged in!', `Hi ${(await response.json()).name}!`);
       } else {
         // type === 'cancel'
@@ -100,7 +99,7 @@ class LoginScreen extends Component {
   }
 }
 
-// am uitate ce facea connectu asta
+// am uitat ce facea connectu asta
 export default connect(null, {signIn, socialRegister})(LoginScreen);
 
 // const LOGIN_REQ_LINK = "https://google.com";
