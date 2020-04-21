@@ -1,6 +1,6 @@
 import Axios from "axios";
 import {ADD_CHAT, ADD_MESSAGE, SET_CHAT, SET_CHATSLIST, UPDATE_MESSAGE} from "../actions/Types";
-import {ADD_WEBSOCKET_CONNECTION, DELETE_CHAT} from "./Types";
+import {ADD_WEBSOCKET_CONNECTION, DELETE_CHAT, RETRY_MESSAGES} from "./Types";
 import {parseISOString} from "../../Utils/Utils";
 import {AsyncStorage} from "react-native";
 
@@ -152,6 +152,8 @@ export const addMessage = (message, receiver) => dispatch => {
 
 export const openWebSocketForChat = () => dispatch => {
     const ws = new WebSocket(WebSocketURL);
+    console.log("Opening websocket connection.");
+    let closeConnection = setTimeout(() => ws.close(), 5000);
 
     ws.onopen = () => {
         const handshake = {
@@ -160,6 +162,14 @@ export const openWebSocketForChat = () => dispatch => {
         };
 
         ws.send(JSON.stringify(handshake));
+
+        setTimeout(() => {
+            ws.send(JSON.stringify({'type': '__ping__'}));
+        }, 500);
+
+        dispatch({
+            type: RETRY_MESSAGES,
+        })
     };
 
     ws.onmessage = (message) => {
@@ -187,14 +197,21 @@ export const openWebSocketForChat = () => dispatch => {
                     message: new_message,
                 }
             })
+        } else if (messageData.type === '__pong__') {
+            console.log('Received pong');
+            clearTimeout(closeConnection);
+            setTimeout(() => {
+                ws.send(JSON.stringify({'type': '__ping__'}));
+            }, 2500);
+            closeConnection = setTimeout(() => ws.close(), 5000);
         }
 
         addMessageToStorage(receiver, new_message);
     };
 
     ws.onclose = (reason) => {
-        console.log(reason);
-        setTimeout(() => openWebSocketForChat(), 3000);
+        console.log("onclose");
+        setTimeout(() => dispatch(openWebSocketForChat()), 1000);
     };
 
     dispatch({
@@ -211,7 +228,7 @@ const messageFromHTTPData = (direction, data) => {
         text: data.text,
         datetime: parseISOString(data.datetime),
         sent: true,
-        frontend_id: data.frontend_id,
+        created_timestamp: data.created_timestamp,
         id: data.id
     }
 };

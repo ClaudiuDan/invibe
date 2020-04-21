@@ -2,7 +2,7 @@ import {
     ADD_CHAT,
     ADD_MESSAGE,
     ADD_WEBSOCKET_CONNECTION,
-    DELETE_CHAT,
+    DELETE_CHAT, RETRY_MESSAGES,
     SET_CHAT,
     SET_CHATSLIST,
     UPDATE_MESSAGE
@@ -44,8 +44,21 @@ function chatReducer(state = {}, action) {
                 }
             };
 
+        case RETRY_MESSAGES:
+            for (receiver in state.messages) {
+                state.messages[receiver].forEach(msg => {
+                    if (!msg.sent) {
+                        sendMessageViaWebSocket(msg, state.webSocket, receiver);
+                    }
+                });
+            }
+
+            return state;
+
         case ADD_MESSAGE:
             receiver = action.payload.receiver;
+            sendMessageViaWebSocket(action.payload.message, state.webSocket, receiver);
+
             const old_messages = receiver in state.messages ? state.messages[receiver] : [];
             return {
                 ...state,
@@ -61,7 +74,7 @@ function chatReducer(state = {}, action) {
             // TODO: the frontend_id is not stored in the db in a persistent way, consider checking for id as well(maybe improve this design)
             const messages = receiver in state.messages ? state.messages[receiver] : [];
             const message = action.payload.message;
-            index = messages.findIndex((msg) => msg.frontend_id && msg.frontend_id.toString() === message.frontend_id.toString());
+            index = messages.findIndex((msg) => msg.created_timestamp && msg.created_timestamp.toString() === message.created_timestamp.toString());
             if (index !== -1) {
                 return {
                     ...state,
@@ -82,5 +95,16 @@ function chatReducer(state = {}, action) {
             return state
     }
 }
+
+const sendMessageViaWebSocket = (msg, ws, receiver) => {
+    if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+            type: 'message',
+            text: msg.text,
+            receiver: receiver,
+            created_timestamp: msg.created_timestamp,
+        }));
+    }
+};
 
 export default chatReducer;

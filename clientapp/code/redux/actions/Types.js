@@ -8,5 +8,6 @@ export const ADD_CHAT = 'ADD_CHAT';
 export const DELETE_CHAT = 'DELETE_CHAT';
 export const SET_CHAT = 'SET_CHAT';
 export const ADD_MESSAGE = 'ADD_MESSAGE';
+export const RETRY_MESSAGES = 'RETRY_MESSAGES';
 export const UPDATE_MESSAGE = 'UPDATE_MESSAGE';
 export const ADD_WEBSOCKET_CONNECTION = 'ADD_WEBSOCKET_CONNECTION';

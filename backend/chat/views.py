@@ -13,20 +13,21 @@ from inv_user.forms import User
 from .models import Message, Chat
 
 
-class GetChatAPIView(APIView):
+class ChatAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         u1 = self.request.query_params.get('receiver')
         u2 = request.user.pk
-        query = Message.objects.filter(Q(sender=u1, receiver=u2) | Q(sender=u2, receiver=u1))
+        query = Message.objects.filter(Q(sender=u1, receiver=u2) | Q(sender=u2, receiver=u1)).order_by(
+            'server_received_datetime')
         messages = []
         for message in query:
             messages.append(
                 {
                     "id": message.pk,
                     "text": message.text,
-                    "datetime": message.datetime,
+                    "datetime": message.server_received_datetime,
                     "is_seen": message.is_seen,
                     "receiver": message.receiver.pk,
                     "sender": message.sender.pk
@@ -36,28 +37,36 @@ class GetChatAPIView(APIView):
         return Response(json.dumps({"messages": messages}, cls=DjangoJSONEncoder), status=status.HTTP_200_OK)
 
 
-class GetChatsAPIView(APIView):
+class ChatsAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        query = Chat.objects.filter(owner=request.user.pk)
+        query = Chat.objects.filter(owner=request.user.pk).order_by('-last_msg_datetime')
         chats = []
         for chat in query:
             chats.append(
                 {
                     "id": chat.pk,
-                    "receiver": chat.receiver.pk
+                    "receiver": chat.receiver.pk,
+                    "last_msg_datetime'": chat.last_msg_datetime,
                 }
             )
-        return Response(json.dumps({"chats": chats}), status=status.HTTP_200_OK)
+        return Response(json.dumps({"chats": chats}, cls=DjangoJSONEncoder), status=status.HTTP_200_OK)
 
     def post(self, request):
+        receiver = User.objects.get(pk=request.data['receiver'])
         new_chat = Chat.objects.create(
             owner=request.user,
-            receiver=User.objects.get(pk=request.data['receiver'])
+            receiver=receiver,
         )
 
         new_chat.save()
+
+        # Create the chat for the receiver
+        Chat.objects.create(
+            owner=receiver,
+            receiver=request.user,
+        ).save()
 
         return Response(json.dumps({"id": new_chat.pk, "receiver": request.data['receiver']}),
                         status=status.HTTP_201_CREATED)

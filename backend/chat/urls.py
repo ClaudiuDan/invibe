@@ -1,12 +1,12 @@
 from django.conf.urls import url
 
-from .views import GetChatAPIView, GetChatsAPIView
+from .views import ChatAPIView, ChatsAPIView
 
 urlpatterns = [
     url(r'get_chat/$',
-        GetChatAPIView.as_view(),
+        ChatAPIView.as_view(),
         name='get_chat'),
     url(r'active_chats/$',
-        GetChatsAPIView.as_view(),
+        ChatsAPIView.as_view(),
         name='get_chats'),
 ]
