@@ -1,4 +1,5 @@
 import {StyleSheet} from "react-native";
+import {chatColour} from "./ChatsScreenStyles";
 
 export const chatInputStyles = StyleSheet.create({
 
@@ -43,7 +44,7 @@ export const chatInputStyles = StyleSheet.create({
         marginLeft: 5,
         paddingRight: 15,
         borderRadius: 20,
-        backgroundColor: '#517fa4'
+        backgroundColor:  chatColour
     },
 
     //MessageBubble
@@ -68,7 +69,7 @@ export const chatInputStyles = StyleSheet.create({
     },
 
     messageBubbleRight: {
-        backgroundColor: '#517fa4'
+        backgroundColor: chatColour
     },
 
     messageBubbleTextRight: {

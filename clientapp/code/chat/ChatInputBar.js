@@ -4,6 +4,7 @@ import {Text, TextInput, TouchableHighlight, View} from "react-native";
 import {chatInputStyles} from "./styles/ChatInputStyles";
 import ImagePickerView from "./ImagePickerView";
 import {Icon} from "react-native-elements";
+import {chatColour, chatSelectedColour} from "./styles/ChatsScreenStyles";
 
 export class InputBar extends Component {
 
@@ -21,9 +22,9 @@ export class InputBar extends Component {
                     name='send'
                     type='feather'
                     size={20}
-                    color={'#517fa4'}
+                    color={chatColour}
                     onPress={this.props.onSendPressed}
-                    underlayColor={'#233346'}
+                    underlayColor={chatSelectedColour}
                 />
             </View>
         );

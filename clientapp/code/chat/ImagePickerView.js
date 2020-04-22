@@ -2,6 +2,7 @@ import React, {Component} from 'react';
 import {Icon} from 'react-native-elements'
 import * as ImagePicker from 'expo-image-picker';
 import {connectActionSheet} from '@expo/react-native-action-sheet'
+import {chatColour, chatSelectedColour} from "./styles/ChatsScreenStyles";
 
 class ImagePickerView extends Component {
 
@@ -35,9 +36,11 @@ class ImagePickerView extends Component {
                 mediaTypes: ImagePicker.MediaTypeOptions.All,
                 quality: 0.5,
                 base64: true,
+                allowsMultipleSelection: true,
 
             });
             if (!result.cancelled) {
+                console.log(result.uri);
                 this.setState({image: result.uri});
             }
         } catch (E) {
@@ -72,10 +75,9 @@ class ImagePickerView extends Component {
                 name='camerao'
                 type='antdesign'
                 size={20}
-                color={'#517fa4'}
+                color={chatColour}
                 onPress={this.openActionSheetImagePicker}
-                underlayColor={'#233346'}
-
+                underlayColor={chatSelectedColour}
             />
         )
     }

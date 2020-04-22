@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import {connect} from "react-redux";
 import {addChat, deleteChat, getChatsList} from "../redux/actions/ChatAction";
-import {styles} from "../chat/styles/ChatsScreenStyles";
+import {chatColour, styles} from "../chat/styles/ChatsScreenStyles";
 import {connectActionSheet} from "@expo/react-native-action-sheet";
 
 
@@ -79,7 +79,7 @@ class ChatsScreen extends Component {
                 {this.getModalView(modalVisible)}
                 <Button
                     title="New chat"
-                    color="#517fa4"
+                    color={chatColour}
                     onPress={() => {
                         this.setModalVisible(true);
                     }}
@@ -105,7 +105,7 @@ class ChatsScreen extends Component {
                 </ScrollView>
                 <Button
                     title="Go back"
-                    color="#517fa4"
+                    color={chatColour}
                     onPress={() => this.props.navigation.navigate('Home')}
                 />
             </View>
@@ -130,7 +130,7 @@ class ChatsScreen extends Component {
                             <TouchableHighlight
                                 style={{
                                     ...styles.openButton,
-                                    backgroundColor: "#517fa4",
+                                    backgroundColor: {chatColour},
                                     margin: 10,
                                     width: '30%'
                                 }}
@@ -145,7 +145,7 @@ class ChatsScreen extends Component {
                             <TouchableHighlight
                                 style={{
                                     ...styles.openButton,
-                                    backgroundColor: "#517fa4",
+                                    backgroundColor: {chatColour},
                                     margin: 10,
                                     width: '30%'
                                 }}

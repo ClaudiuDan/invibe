@@ -3,7 +3,7 @@ import {Keyboard, ScrollView, View,} from 'react-native';
 import {connect} from "react-redux";
 import {addMessage, getChat} from "../redux/actions/ChatAction";
 import {chatInputStyles} from "./styles/ChatInputStyles";
-import {MessageBubble} from "./MessageBubble";
+import {ImageContent, MessageBubble, TextContent} from "./MessageBubble";
 import {InputBar} from "./ChatInputBar";
 
 class ChatView extends Component {
@@ -88,9 +88,18 @@ class ChatView extends Component {
                                direction={message.direction}
                                text={message.text}
                                datetime={message.datetime}
-                               sent={message.sent}/>
+                               sent={message.sent}
+                               content={<TextContent text={message.text} direction={message.direction}/>}
+                />
             );
         });
+        messages.push(<MessageBubble key={100}
+                                     direction={"right"}
+                                     text={""}
+                                     datetime={new Date()}
+                                     sent={true}
+                                     content={<ImageContent key={1000}/>}
+        />)
 
         return (
             <View style={chatInputStyles.outer}>
