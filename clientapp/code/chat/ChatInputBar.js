@@ -2,6 +2,8 @@
 import React, {Component} from "react";
 import {Text, TextInput, TouchableHighlight, View} from "react-native";
 import {chatInputStyles} from "./styles/ChatInputStyles";
+import ImagePickerView from "./ImagePickerView";
+import {Icon} from "react-native-elements";
 
 export class InputBar extends Component {
 
@@ -10,17 +12,19 @@ export class InputBar extends Component {
             <View style={chatInputStyles.inputBar}>
                 <TextInput style={chatInputStyles.textBox}
                            multiline={true}
-                           defaultHeight={30}
                            onChangeText={(text) => this.props.onChangeText(text)}
                            onContentSizeChange={this.props.onSizeChange}
                            value={this.props.text}/>
-                <TouchableHighlight
-                    style={chatInputStyles.sendButton}
-                    onPress={() => this.props.onSendPressed()}>
-                    <Text style={{color: 'white'}}>
-                        Send
-                    </Text>
-                </TouchableHighlight>
+                    <ImagePickerView/>
+                <Icon
+                    reverse
+                    name='send'
+                    type='feather'
+                    size={20}
+                    color={'#517fa4'}
+                    onPress={this.props.onSendPressed}
+                    underlayColor={'#233346'}
+                />
             </View>
         );
     }

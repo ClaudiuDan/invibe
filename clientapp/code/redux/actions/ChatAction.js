@@ -146,7 +146,9 @@ export const addMessage = (message, receiver) => dispatch => {
             receiver: receiver,
             message: message,
         }
-    })
+    });
+
+    addMessageToStorage(receiver, message);
 };
 
 
@@ -185,7 +187,9 @@ export const openWebSocketForChat = () => dispatch => {
                     receiver: receiver,
                     message: new_message,
                 }
-            })
+            });
+
+            updateMessageInStorage(receiver, new_message);
         } else if (messageData.type === 'new_message') {
             new_message = messageFromHTTPData('left', messageData);
             receiver = messageData.sender.toString();
@@ -196,9 +200,10 @@ export const openWebSocketForChat = () => dispatch => {
                     receiver: receiver,
                     message: new_message,
                 }
-            })
+            });
+
+            addMessageToStorage(receiver, new_message);
         } else if (messageData.type === '__pong__') {
-            console.log('Received pong');
             clearTimeout(closeConnection);
             setTimeout(() => {
                 ws.send(JSON.stringify({'type': '__ping__'}));
@@ -206,7 +211,6 @@ export const openWebSocketForChat = () => dispatch => {
             closeConnection = setTimeout(() => ws.close(), 5000);
         }
 
-        addMessageToStorage(receiver, new_message);
     };
 
     ws.onclose = (reason) => {
@@ -244,6 +248,23 @@ const retrieveFromLocalStorage = async (key, callback, errText) =>
     })
         .catch(err => console.log(errText, err));
 
+const updateMessageInStorage = (receiver, message) => {
+    const key = 'chat-' + receiver.toString();
+    retrieveFromLocalStorage(key,
+        chat => {
+            const parsedChat = JSON.parse(chat);
+            let i = parsedChat.length - 1;
+            while (i >= 0 && parsedChat[i].created_timestamp && parsedChat[i].created_timestamp.toString() !== message.created_timestamp.toString()) {
+                i--;
+            }
+            if (i !== -1) {
+                saveToLocalStorage(key,
+                    JSON.stringify([...parsedChat.splice(0, i), message, ...parsedChat.splice(i + 1)]),
+                    'Could not save the message for receiver ' + receiver.toString());
+            }
+        },
+        'Could not get the chat for receiver ' + receiver.toString());
+};
 
 // TODO: Keep messages sorted by datetime
 // TODO: Consider storing the messages individually to improve the update performance(or probably better in batches)

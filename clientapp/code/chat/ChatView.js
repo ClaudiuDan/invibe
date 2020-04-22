@@ -44,20 +44,22 @@ class ChatView extends Component {
     _sendMessage() {
         const message = this.state.inputBarText;
 
-        this.props.addMessage(
-            {
-                direction: "right",
-                text: message,
-                datetime: new Date(),
-                created_timestamp: Math.floor(Date.now() / 1000),
-                sent: false,
-                id: 0,
-            }, this.props.userId
-        );
+        if (message) {
+            this.props.addMessage(
+                {
+                    direction: "right",
+                    text: message,
+                    datetime: new Date(),
+                    created_timestamp: Math.floor(Date.now() / 1000),
+                    sent: false,
+                    id: 0,
+                }, this.props.userId
+            );
 
-        this.setState({
-            inputBarText: ''
-        });
+            this.setState({
+                inputBarText: ''
+            });
+        }
 
         Keyboard.dismiss()
     }

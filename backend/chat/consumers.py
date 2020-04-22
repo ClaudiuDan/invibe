@@ -7,6 +7,7 @@ from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 from django.utils import timezone
 from django.db.models import Q
+from django.db import IntegrityError
 from inv_user.models import User
 from rest_framework.authtoken.models import Token
 from .models import Message, Chat
@@ -26,16 +27,32 @@ class ChatConsumer(WebsocketConsumer):
             self._handshake()
 
         elif data['type'] == 'message':
-            replies = self._message(data)
+            try:
+                replies = self._message(data)
 
-            # Broadcast - send to receiver
-            async_to_sync(self.channel_layer.group_send)(str(data["receiver"]), {
-                'type': 'new.message',
-                'text': json.dumps(replies[0])
-            })
+                # Broadcast - send to receiver
+                async_to_sync(self.channel_layer.group_send)(str(data["receiver"]), {
+                    'type': 'new.message',
+                    'text': json.dumps(replies[0])
+                })
 
-            # Message echo - inform me the message was received by server
-            self.send(json.dumps(replies[1]))
+                # Message echo - inform me the message was received by server
+                self.send(json.dumps(replies[1]))
+
+            except IntegrityError:
+                # Message already in the db, just return the message information
+                message = Message.objects.filter(sender=self.scope["user"], created_timestamp=datetime.fromtimestamp(
+                    data['created_timestamp'])).first()
+
+                self.send(json.dumps({
+                    'type': 'message_echo',
+                    'sender': self.scope["user"].pk,
+                    'receiver': data['receiver'],
+                    'text': data['text'],
+                    'created_timestamp': data['created_timestamp'],
+                    'datetime': json.dumps(message.server_received_datetime, cls=DjangoJSONEncoder),
+                    'id': message.pk,
+                }))
 
         elif data['type'] == 'messages_read':
             self._messages_read(data)
@@ -59,6 +76,7 @@ class ChatConsumer(WebsocketConsumer):
             sender=self.scope["user"],
             receiver=receiver
         )
+
         new_message.save()
 
         Chat.objects \

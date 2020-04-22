@@ -59,6 +59,7 @@ class ChatsScreen extends Component {
                 {this.getModalView(modalVisible)}
                 <Button
                     title="New chat"
+                    color="#517fa4"
                     onPress={() => {
                         this.setModalVisible(true);
                     }}
@@ -88,6 +89,7 @@ class ChatsScreen extends Component {
                 </ScrollView>
                 <Button
                     title="Go back"
+                    color="#517fa4"
                     onPress={() => this.props.navigation.navigate('Home')}
                 />
             </View>
@@ -112,7 +114,7 @@ class ChatsScreen extends Component {
                             <TouchableHighlight
                                 style={{
                                     ...styles.openButton,
-                                    backgroundColor: "#2196F3",
+                                    backgroundColor: "#517fa4",
                                     margin: 10,
                                     width: '30%'
                                 }}
@@ -127,7 +129,7 @@ class ChatsScreen extends Component {
                             <TouchableHighlight
                                 style={{
                                     ...styles.openButton,
-                                    backgroundColor: "#2196F3",
+                                    backgroundColor: "#517fa4",
                                     margin: 10,
                                     width: '30%'
                                 }}
