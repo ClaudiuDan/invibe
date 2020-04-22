@@ -12,6 +12,7 @@ import {
 import {connect} from "react-redux";
 import {addChat, deleteChat, getChatsList} from "../redux/actions/ChatAction";
 import {styles} from "../chat/styles/ChatsScreenStyles";
+import {connectActionSheet} from "@expo/react-native-action-sheet";
 
 
 class ChatsScreen extends Component {
@@ -52,6 +53,25 @@ class ChatsScreen extends Component {
         this.setState({userId: text});
     }
 
+    openActionSheetDeleteChat = (id) => {
+        const options = ['Delete'];
+        const destructiveButtonIndex = 0;
+        const cancelButtonIndex = 1;
+
+        this.props.showActionSheetWithOptions(
+            {
+                options,
+                destructiveButtonIndex,
+                cancelButtonIndex
+            },
+            buttonIndex => {
+                if (buttonIndex === destructiveButtonIndex) {
+                    this.props.deleteChat(id);
+                }
+            },
+        );
+    };
+
     render() {
         const {modalVisible, chatsList} = this.state;
         return (
@@ -71,17 +91,13 @@ class ChatsScreen extends Component {
                                 <TouchableWithoutFeedback
                                     style={styles.chatTouchable}
                                     onPress={() => this.props.navigation.navigate('Chat', {userId: chat.receiver})}
+                                    onLongPress={() => this.openActionSheetDeleteChat(chat.id)}
                                 >
                                     <View style={styles.chatView}>
                                         <Text style={styles.chatViewText}>
                                             {"Chat with " + chat.receiver}
                                         </Text>
                                     </View>
-                                </TouchableWithoutFeedback>
-                                <TouchableWithoutFeedback
-                                    style={{backgroundColor: "#000"}}
-                                    onPress={() => this.props.deleteChat(chat.id)}>
-                                    <Text style={{fontSize: 20}}> {"X"} </Text>
                                 </TouchableWithoutFeedback>
                             </View>
                         )
@@ -152,4 +168,4 @@ const mapStateToProps = state => ({
     ws: state.chat.webSocket,
 });
 
-export default connect(mapStateToProps, {getChatsList, addChat, deleteChat})(ChatsScreen);
+export default connect(mapStateToProps, {getChatsList, addChat, deleteChat})(connectActionSheet(ChatsScreen));
