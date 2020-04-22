@@ -9,6 +9,7 @@ export const signIn = (email, password) => dispatch => {
         .then(response => {
             console.log(response.data)
             const {token, user} = response.data;
+            console.log(token)
 
             // We set the returned token as the default authorization header
             Axios.defaults.headers.common.Authorization = `Token ${token}`;
@@ -57,6 +58,7 @@ export const socialRegister = (token) => dispatch => {
         .post(`/auth/rest-auth/facebook/`, {access_token: token})
         .then(response => {
             // USER DOESN T EXIST HERE?
+            console.log("in social register");
             const {key, user} = response.data;
             Axios.defaults.headers.common.Authorization = `Token ${key}`;
 
@@ -70,6 +72,15 @@ export const socialRegister = (token) => dispatch => {
                     user: user,
                 }
             })
+        })
+        .catch(error => console.log(error));
+};
+
+export const socialConnect = (token) => dispatch => {
+    Axios
+        .post(`/auth/rest-auth/facebook/connect/`, {access_token: token})
+        .then(response => {
+            console.log(response.status);
         })
         .catch(error => console.log(error));
 };

@@ -13,6 +13,7 @@ urlpatterns = [
         LogoutInvUserAPIView.as_view(),
         name='auth_user_logout'),
     url(r'^rest-auth/', include('rest_auth.urls')),
+    url(r'^allauth/', include('allauth.urls')),
     url(r'^rest-auth/facebook/$', FacebookLogin.as_view(), name='fb_login'),
     url(r'^rest-auth/facebook/connect/$', FacebookConnect.as_view(), name='fb_connect')
 ]
