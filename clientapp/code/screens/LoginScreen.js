@@ -32,7 +32,7 @@ class LoginScreen extends Component {
 
   handleRequest = () => {
       this.props.signIn(this.state.email, this.state.password);
-  }
+  };
 
   get = () => {
     this.props.signIn(this.state.email, this.state.password);
@@ -51,7 +51,7 @@ class LoginScreen extends Component {
         />
         <View style={{margin:7}} />
           <Button
-            onPress={this.handleRequest.bind(this)}
+            onPress={this.handleRequest}
             title="Login"
           />
           <Text style={{color: 'blue', fontSize: 17}}

@@ -2,9 +2,8 @@ import React, {Component} from 'react';
 import {Keyboard, ScrollView, View,} from 'react-native';
 import {connect} from "react-redux";
 import {addMessage, getChat} from "../redux/actions/ChatAction";
-import {genFrontendId} from "../Utils/Utils";
 import {chatInputStyles} from "./styles/ChatInputStyles";
-import {MessageBubble} from "./MessageBubble";
+import {ImageContent, MessageBubble, TextContent} from "./MessageBubble";
 import {InputBar} from "./ChatInputBar";
 
 class ChatView extends Component {
@@ -20,8 +19,9 @@ class ChatView extends Component {
     }
 
     componentDidMount() {
-        this.props.getChat(this.props.userId.toString());
-
+        if (!(this.props.userId.toString() in this.props.all_ms)) {
+            this.props.getChat(this.props.userId.toString());
+        }
         setTimeout(() => this.scrollView.scrollToEnd());
     }
 
@@ -43,29 +43,23 @@ class ChatView extends Component {
 
     _sendMessage() {
         const message = this.state.inputBarText;
-        const frontend_id = genFrontendId(64);
 
-        this.props.addMessage(
-            {
-                direction: "right",
-                text: message,
-                datetime: new Date(Date.now()),
-                sent: false,
-                frontend_id: frontend_id,
-                id: 0
-            }, this.props.userId
-        );
+        if (message) {
+            this.props.addMessage(
+                {
+                    direction: "right",
+                    text: message,
+                    datetime: new Date(),
+                    created_timestamp: Math.floor(Date.now() / 1000),
+                    sent: false,
+                    id: 0,
+                }, this.props.userId
+            );
 
-        this.props.ws.send(JSON.stringify({
-            type: 'message',
-            text: message,
-            receiver: this.props.userId,
-            frontend_id: frontend_id
-        }));
-
-        this.setState({
-            inputBarText: ''
-        });
+            this.setState({
+                inputBarText: ''
+            });
+        }
 
         Keyboard.dismiss()
     }
@@ -94,9 +88,18 @@ class ChatView extends Component {
                                direction={message.direction}
                                text={message.text}
                                datetime={message.datetime}
-                               sent={message.sent}/>
+                               sent={message.sent}
+                               content={<TextContent text={message.text} direction={message.direction}/>}
+                />
             );
         });
+        messages.push(<MessageBubble key={100}
+                                     direction={"right"}
+                                     text={""}
+                                     datetime={new Date()}
+                                     sent={true}
+                                     content={<ImageContent key={1000}/>}
+        />)
 
         return (
             <View style={chatInputStyles.outer}>

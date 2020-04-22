@@ -86,17 +86,14 @@ export const socialConnect = (token) => dispatch => {
 };
 
 export const signOut = () => dispatch => {
-    Axios
-        .get(`/auth/logout/`)
-        .then(response => {
-            delete Axios.defaults.headers.common.Authorization;
-            SecureStore.deleteItemAsync('userToken')
-                .catch(err => console.log("Could not delete the auth token.", err));
-            dispatch({
-                type: SIGN_OUT,
-            })
-        })
-        .catch(error => console.log(error));
+    Axios.get(`/auth/logout/`).catch(error => console.log(error));
+
+    delete Axios.defaults.headers.common.Authorization;
+    SecureStore.deleteItemAsync('userToken')
+        .catch(err => console.log("Could not delete the auth token.", err));
+    dispatch({
+        type: SIGN_OUT,
+    })
 };
 
 export const restoreToken = () => dispatch => {

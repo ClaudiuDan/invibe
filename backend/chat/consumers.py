@@ -1,12 +1,16 @@
 import json
+from datetime import datetime
+
 from django.core.serializers.json import DjangoJSONEncoder
 
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 from django.utils import timezone
+from django.db.models import Q
+from django.db import IntegrityError
 from inv_user.models import User
 from rest_framework.authtoken.models import Token
-from .models import Message
+from .models import Message, Chat
 
 
 class ChatConsumer(WebsocketConsumer):
@@ -23,19 +27,38 @@ class ChatConsumer(WebsocketConsumer):
             self._handshake()
 
         elif data['type'] == 'message':
-            replies = self._message(data)
+            try:
+                replies = self._message(data)
 
-            # Broadcast - send to receiver
-            async_to_sync(self.channel_layer.group_send)(str(data["receiver"]), {
-                'type': 'new.message',
-                'text': json.dumps(replies[0])
-            })
+                # Broadcast - send to receiver
+                async_to_sync(self.channel_layer.group_send)(str(data["receiver"]), {
+                    'type': 'new.message',
+                    'text': json.dumps(replies[0])
+                })
 
-            # Message echo - inform me the message was received by server
-            self.send(json.dumps(replies[1]))
+                # Message echo - inform me the message was received by server
+                self.send(json.dumps(replies[1]))
+
+            except IntegrityError:
+                # Message already in the db, just return the message information
+                message = Message.objects.filter(sender=self.scope["user"], created_timestamp=datetime.fromtimestamp(
+                    data['created_timestamp'])).first()
+
+                self.send(json.dumps({
+                    'type': 'message_echo',
+                    'sender': self.scope["user"].pk,
+                    'receiver': data['receiver'],
+                    'text': data['text'],
+                    'created_timestamp': data['created_timestamp'],
+                    'datetime': json.dumps(message.server_received_datetime, cls=DjangoJSONEncoder),
+                    'id': message.pk,
+                }))
 
         elif data['type'] == 'messages_read':
             self._messages_read(data)
+
+        elif data['type'] == '__ping__':
+            self.send(json.dumps({'type': '__pong__'}))
 
     def new_message(self, message):
         self.send(message['text'])
@@ -45,23 +68,27 @@ class ChatConsumer(WebsocketConsumer):
 
     def _message(self, data):
 
+        receiver = User.objects.get(pk=data['receiver'])
+
         new_message = Message.objects.create(
             text=data['text'],
-            datetime=timezone.now(),
+            created_timestamp=datetime.fromtimestamp(data['created_timestamp']),
             sender=self.scope["user"],
-            receiver=User.objects.get(pk=data['receiver'])
+            receiver=receiver
         )
+
         new_message.save()
 
-        print(data['text'])
+        Chat.objects \
+            .filter(Q(owner=self.scope["user"], receiver=receiver) | Q(owner=receiver, receiver=self.scope["user"])) \
+            .update(last_msg_datetime=new_message.server_received_datetime)
 
         broadcast = {
             'type': 'new_message',
             'sender': self.scope["user"].pk,
             'receiver': data['receiver'],
             'text': data['text'],
-            'frontend_id': data['frontend_id'],
-            'datetime': json.dumps(new_message.datetime, cls=DjangoJSONEncoder),
+            'datetime': json.dumps(new_message.server_received_datetime, cls=DjangoJSONEncoder),
             'id': new_message.pk,
         }
 
@@ -70,8 +97,8 @@ class ChatConsumer(WebsocketConsumer):
             'sender': self.scope["user"].pk,
             'receiver': data['receiver'],
             'text': data['text'],
-            'frontend_id': data['frontend_id'],
-            'datetime': json.dumps(new_message.datetime, cls=DjangoJSONEncoder),
+            'created_timestamp': data['created_timestamp'],
+            'datetime': json.dumps(new_message.server_received_datetime, cls=DjangoJSONEncoder),
             'id': new_message.pk,
         }
         return broadcast, reply

@@ -1,5 +1,8 @@
 import {StyleSheet} from "react-native";
 
+export const chatColour = "#517fa4";
+export const chatSelectedColour = "#233346";
+
 export const styles = StyleSheet.create({
     centeredView: {
         flex: 1,

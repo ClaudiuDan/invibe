@@ -1,4 +1,5 @@
 import {StyleSheet} from "react-native";
+import {chatColour} from "./ChatsScreenStyles";
 
 export const chatInputStyles = StyleSheet.create({
 
@@ -19,7 +20,8 @@ export const chatInputStyles = StyleSheet.create({
 
     inputBar: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        justifyContent: 'center',
+        alignItems: 'center',
         paddingHorizontal: 5,
         paddingVertical: 3,
     },
@@ -29,6 +31,7 @@ export const chatInputStyles = StyleSheet.create({
         borderWidth: 1,
         alignItems: "center",
         borderColor: 'gray',
+        height: '50%',
         flex: 1,
         fontSize: 17,
         paddingHorizontal: 10
@@ -41,7 +44,7 @@ export const chatInputStyles = StyleSheet.create({
         marginLeft: 5,
         paddingRight: 15,
         borderRadius: 20,
-        backgroundColor: '#2196F3'
+        backgroundColor:  chatColour
     },
 
     //MessageBubble
@@ -66,7 +69,7 @@ export const chatInputStyles = StyleSheet.create({
     },
 
     messageBubbleRight: {
-        backgroundColor: '#2196F3'
+        backgroundColor: chatColour
     },
 
     messageBubbleTextRight: {

@@ -13,6 +13,7 @@ import {connect} from "react-redux";
 import {createStackNavigator} from "@react-navigation/stack";
 import {Text} from "react-native";
 import {restoreToken} from "./code/redux/actions/AuthAction";
+import {ActionSheetProvider} from "@expo/react-native-action-sheet";
 
 
 class Main extends Component {
@@ -34,28 +35,31 @@ class Main extends Component {
         }
         const Stack = createStackNavigator();
         return (
-            <NavigationContainer>
-                <Stack.Navigator>
-                    {this.props.userToken == null ? (
-                        <>
-                            <Stack.Screen name="Login" component={LoginScreen}/>
-                            <Stack.Screen name="Register" component={RegisterScreen}/>
-                        </>
-                    ) : (
-                        <>
-                            <Stack.Screen
-                                name="Home"
-                                component={HomeScreen}
-                                options={{title: 'Welcome'}}
-                            />
-                            <Stack.Screen name="Profile" component={ProfileScreen}/>
-                            <Stack.Screen name="Chats" component={ChatsScreen}/>
-                            <Stack.Screen name="Chat" component={U2UChatScreen}  options={({ route }) => ({ title: 'Chat with user ' + route.params.userId })}/>
-                            <Stack.Screen name="Settings" component={SettingsScreen}/>
-                        </>
-                    )}
-                </Stack.Navigator>
-            </NavigationContainer>
+            <ActionSheetProvider>
+                <NavigationContainer>
+                    <Stack.Navigator>
+                        {this.props.userToken == null ? (
+                            <>
+                                <Stack.Screen name="Login" component={LoginScreen}/>
+                                <Stack.Screen name="Register" component={RegisterScreen}/>
+                            </>
+                        ) : (
+                            <>
+                                <Stack.Screen
+                                    name="Home"
+                                    component={HomeScreen}
+                                    options={{title: 'Welcome'}}
+                                />
+                                <Stack.Screen name="Profile" component={ProfileScreen}/>
+                                <Stack.Screen name="Chats" component={ChatsScreen}/>
+                                <Stack.Screen name="Chat" component={U2UChatScreen}
+                                              options={({route}) => ({title: 'Chat with user ' + route.params.userId})}/>
+                                <Stack.Screen name="Settings" component={SettingsScreen}/>
+                            </>
+                        )}
+                    </Stack.Navigator>
+                </NavigationContainer>
+            </ActionSheetProvider>
         )
     }
 }

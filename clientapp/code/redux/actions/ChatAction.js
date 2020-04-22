@@ -1,6 +1,6 @@
 import Axios from "axios";
 import {ADD_CHAT, ADD_MESSAGE, SET_CHAT, SET_CHATSLIST, UPDATE_MESSAGE} from "../actions/Types";
-import {ADD_WEBSOCKET_CONNECTION, DELETE_CHAT} from "./Types";
+import {ADD_WEBSOCKET_CONNECTION, DELETE_CHAT, RETRY_MESSAGES} from "./Types";
 import {parseISOString} from "../../Utils/Utils";
 import {AsyncStorage} from "react-native";
 
@@ -146,12 +146,16 @@ export const addMessage = (message, receiver) => dispatch => {
             receiver: receiver,
             message: message,
         }
-    })
+    });
+
+    addMessageToStorage(receiver, message);
 };
 
 
 export const openWebSocketForChat = () => dispatch => {
     const ws = new WebSocket(WebSocketURL);
+    console.log("Opening websocket connection.");
+    let closeConnection = setTimeout(() => ws.close(), 5000);
 
     ws.onopen = () => {
         const handshake = {
@@ -160,6 +164,14 @@ export const openWebSocketForChat = () => dispatch => {
         };
 
         ws.send(JSON.stringify(handshake));
+
+        setTimeout(() => {
+            ws.send(JSON.stringify({'type': '__ping__'}));
+        }, 500);
+
+        dispatch({
+            type: RETRY_MESSAGES,
+        })
     };
 
     ws.onmessage = (message) => {
@@ -175,7 +187,9 @@ export const openWebSocketForChat = () => dispatch => {
                     receiver: receiver,
                     message: new_message,
                 }
-            })
+            });
+
+            updateMessageInStorage(receiver, new_message);
         } else if (messageData.type === 'new_message') {
             new_message = messageFromHTTPData('left', messageData);
             receiver = messageData.sender.toString();
@@ -186,15 +200,22 @@ export const openWebSocketForChat = () => dispatch => {
                     receiver: receiver,
                     message: new_message,
                 }
-            })
+            });
+
+            addMessageToStorage(receiver, new_message);
+        } else if (messageData.type === '__pong__') {
+            clearTimeout(closeConnection);
+            setTimeout(() => {
+                ws.send(JSON.stringify({'type': '__ping__'}));
+            }, 2500);
+            closeConnection = setTimeout(() => ws.close(), 5000);
         }
 
-        addMessageToStorage(receiver, new_message);
     };
 
     ws.onclose = (reason) => {
-        console.log(reason);
-        setTimeout(() => openWebSocketForChat(), 3000);
+        console.log("onclose");
+        setTimeout(() => dispatch(openWebSocketForChat()), 1000);
     };
 
     dispatch({
@@ -211,7 +232,7 @@ const messageFromHTTPData = (direction, data) => {
         text: data.text,
         datetime: parseISOString(data.datetime),
         sent: true,
-        frontend_id: data.frontend_id,
+        created_timestamp: data.created_timestamp,
         id: data.id
     }
 };
@@ -227,6 +248,23 @@ const retrieveFromLocalStorage = async (key, callback, errText) =>
     })
         .catch(err => console.log(errText, err));
 
+const updateMessageInStorage = (receiver, message) => {
+    const key = 'chat-' + receiver.toString();
+    retrieveFromLocalStorage(key,
+        chat => {
+            const parsedChat = JSON.parse(chat);
+            let i = parsedChat.length - 1;
+            while (i >= 0 && parsedChat[i].created_timestamp && parsedChat[i].created_timestamp.toString() !== message.created_timestamp.toString()) {
+                i--;
+            }
+            if (i !== -1) {
+                saveToLocalStorage(key,
+                    JSON.stringify([...parsedChat.splice(0, i), message, ...parsedChat.splice(i + 1)]),
+                    'Could not save the message for receiver ' + receiver.toString());
+            }
+        },
+        'Could not get the chat for receiver ' + receiver.toString());
+};
 
 // TODO: Keep messages sorted by datetime
 // TODO: Consider storing the messages individually to improve the update performance(or probably better in batches)

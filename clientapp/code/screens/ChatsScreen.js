@@ -11,7 +11,8 @@ import {
 } from "react-native";
 import {connect} from "react-redux";
 import {addChat, deleteChat, getChatsList} from "../redux/actions/ChatAction";
-import {styles} from "../chat/styles/ChatsScreenStyles";
+import {chatColour, styles} from "../chat/styles/ChatsScreenStyles";
+import {connectActionSheet} from "@expo/react-native-action-sheet";
 
 
 class ChatsScreen extends Component {
@@ -52,6 +53,25 @@ class ChatsScreen extends Component {
         this.setState({userId: text});
     }
 
+    openActionSheetDeleteChat = (id) => {
+        const options = ['Delete'];
+        const destructiveButtonIndex = 0;
+        const cancelButtonIndex = 1;
+
+        this.props.showActionSheetWithOptions(
+            {
+                options,
+                destructiveButtonIndex,
+                cancelButtonIndex
+            },
+            buttonIndex => {
+                if (buttonIndex === destructiveButtonIndex) {
+                    this.props.deleteChat(id);
+                }
+            },
+        );
+    };
+
     render() {
         const {modalVisible, chatsList} = this.state;
         return (
@@ -59,6 +79,7 @@ class ChatsScreen extends Component {
                 {this.getModalView(modalVisible)}
                 <Button
                     title="New chat"
+                    color={chatColour}
                     onPress={() => {
                         this.setModalVisible(true);
                     }}
@@ -70,6 +91,7 @@ class ChatsScreen extends Component {
                                 <TouchableWithoutFeedback
                                     style={styles.chatTouchable}
                                     onPress={() => this.props.navigation.navigate('Chat', {userId: chat.receiver})}
+                                    onLongPress={() => this.openActionSheetDeleteChat(chat.id)}
                                 >
                                     <View style={styles.chatView}>
                                         <Text style={styles.chatViewText}>
@@ -77,17 +99,13 @@ class ChatsScreen extends Component {
                                         </Text>
                                     </View>
                                 </TouchableWithoutFeedback>
-                                <TouchableWithoutFeedback
-                                    style={{backgroundColor: "#000"}}
-                                    onPress={() => this.props.deleteChat(chat.id)}>
-                                    <Text style={{fontSize: 20}}> {"X"} </Text>
-                                </TouchableWithoutFeedback>
                             </View>
                         )
                     })}
                 </ScrollView>
                 <Button
                     title="Go back"
+                    color={chatColour}
                     onPress={() => this.props.navigation.navigate('Home')}
                 />
             </View>
@@ -112,7 +130,7 @@ class ChatsScreen extends Component {
                             <TouchableHighlight
                                 style={{
                                     ...styles.openButton,
-                                    backgroundColor: "#2196F3",
+                                    backgroundColor: {chatColour},
                                     margin: 10,
                                     width: '30%'
                                 }}
@@ -127,7 +145,7 @@ class ChatsScreen extends Component {
                             <TouchableHighlight
                                 style={{
                                     ...styles.openButton,
-                                    backgroundColor: "#2196F3",
+                                    backgroundColor: {chatColour},
                                     margin: 10,
                                     width: '30%'
                                 }}
@@ -150,4 +168,4 @@ const mapStateToProps = state => ({
     ws: state.chat.webSocket,
 });
 
-export default connect(mapStateToProps, {getChatsList, addChat, deleteChat})(ChatsScreen);
+export default connect(mapStateToProps, {getChatsList, addChat, deleteChat})(connectActionSheet(ChatsScreen));
