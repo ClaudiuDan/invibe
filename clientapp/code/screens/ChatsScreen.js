@@ -90,7 +90,7 @@ class ChatsScreen extends Component {
                             <View style={styles.chatAndDeleteButton} key={chat.id}>
                                 <TouchableWithoutFeedback
                                     style={styles.chatTouchable}
-                                    onPress={() => this.props.navigation.navigate('Chat', {userId: chat.receiver})}
+                                    onPress={() => this.props.navigation.navigate('Chat', {receiverId: chat.receiver})}
                                     onLongPress={() => this.openActionSheetDeleteChat(chat.id)}
                                 >
                                     <View style={styles.chatView}>
@@ -130,7 +130,7 @@ class ChatsScreen extends Component {
                             <TouchableHighlight
                                 style={{
                                     ...styles.openButton,
-                                    backgroundColor: {chatColour},
+                                    backgroundColor: chatColour,
                                     margin: 10,
                                     width: '30%'
                                 }}
@@ -145,7 +145,7 @@ class ChatsScreen extends Component {
                             <TouchableHighlight
                                 style={{
                                     ...styles.openButton,
-                                    backgroundColor: {chatColour},
+                                    backgroundColor: chatColour,
                                     margin: 10,
                                     width: '30%'
                                 }}

@@ -12,7 +12,7 @@ import {
 import {connect} from "react-redux";
 import {createStackNavigator} from "@react-navigation/stack";
 import {Text} from "react-native";
-import {restoreToken} from "./code/redux/actions/AuthAction";
+import {restoreToken, restoreUserId} from "./code/redux/actions/AuthAction";
 import {ActionSheetProvider} from "@expo/react-native-action-sheet";
 
 
@@ -22,6 +22,7 @@ class Main extends Component {
         this.setState({userToken: null});
         this.setState({isLoading: false});
         this.props.restoreToken();
+        this.props.restoreUserId();
     }
 
     render() {
@@ -53,7 +54,7 @@ class Main extends Component {
                                 <Stack.Screen name="Profile" component={ProfileScreen}/>
                                 <Stack.Screen name="Chats" component={ChatsScreen}/>
                                 <Stack.Screen name="Chat" component={U2UChatScreen}
-                                              options={({route}) => ({title: 'Chat with user ' + route.params.userId})}/>
+                                              options={({route}) => ({title: 'Chat with user ' + route.params.receiverId})}/>
                                 <Stack.Screen name="Settings" component={SettingsScreen}/>
                             </>
                         )}
@@ -70,4 +71,4 @@ const mapStateToProps = state => ({
     userToken: state.auth.userToken,
 });
 
-export default connect(mapStateToProps, {restoreToken})(Main);
+export default connect(mapStateToProps, {restoreToken, restoreUserId})(Main);

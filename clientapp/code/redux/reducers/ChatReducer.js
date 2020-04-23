@@ -56,7 +56,7 @@ function chatReducer(state = {}, action) {
             return state;
 
         case ADD_MESSAGE:
-            receiver = action.payload.receiver;
+            receiver = action.payload.message.receiver;
             sendMessageViaWebSocket(action.payload.message, state.webSocket, receiver);
 
             const old_messages = receiver in state.messages ? state.messages[receiver] : [];
@@ -69,12 +69,12 @@ function chatReducer(state = {}, action) {
             };
 
         case UPDATE_MESSAGE:
-            receiver = action.payload.receiver;
+            receiver = action.payload.message.receiver;
             // TODO: Consider doing binary search if stored sorted by datetime
             // TODO: the frontend_id is not stored in the db in a persistent way, consider checking for id as well(maybe improve this design)
             const messages = receiver in state.messages ? state.messages[receiver] : [];
             const message = action.payload.message;
-            index = messages.findIndex((msg) => msg.created_timestamp && msg.created_timestamp.toString() === message.created_timestamp.toString());
+            index = messages.findIndex((msg) => msg.createdTimestamp && msg.createdTimestamp.toString() === message.createdTimestamp.toString());
             if (index !== -1) {
                 return {
                     ...state,
@@ -102,7 +102,7 @@ const sendMessageViaWebSocket = (msg, ws, receiver) => {
             type: 'message',
             text: msg.text,
             receiver: receiver,
-            created_timestamp: msg.created_timestamp,
+            created_timestamp: msg.createdTimestamp,
         }));
     }
 };

@@ -1,4 +1,4 @@
-import {SIGN_IN, SIGN_OUT, RESTORE_TOKEN} from "../actions/Types";
+import {RESTORE_TOKEN, RESTORE_USERID, SIGN_IN, SIGN_OUT} from "../actions/Types";
 
 function authReducer(state = {}, action) {
     switch (action.type) {
@@ -6,6 +6,7 @@ function authReducer(state = {}, action) {
             return {
                 ...state,
                 userToken: action.payload.token,
+                userId: action.payload.userId,
             };
 
         case SIGN_OUT:
@@ -19,6 +20,12 @@ function authReducer(state = {}, action) {
                 ...state,
                 userToken: action.payload.token,
                 isLoading: false,
+            };
+
+        case RESTORE_USERID:
+            return {
+                ...state,
+                userId: action.payload.userId,
             };
 
         default:

@@ -6,14 +6,14 @@ class U2UChatScreen extends Component {
         super(props);
 
         this.state = {
-            userId:  this.props.route.params.userId,
+            receiverId:  this.props.route.params.receiverId,
         }
     }
 
     render() {
         return (
             <ChatView
-                userId={this.props.route.params.userId}
+                receiverId={this.props.route.params.receiverId}
             />
         );
     }

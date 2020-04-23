@@ -5,22 +5,23 @@ import {addMessage, getChat} from "../../redux/actions/ChatAction";
 import {chatInputStyles} from "../styles/ChatInputStyles";
 import {ImageContent, MessageBox, TextContent} from "./MessageBox";
 import {InputBar} from "./ChatInputBar";
+import TextChatMessage from "../TextChatMessage";
 
 class ChatView extends Component {
 
     constructor(props) {
         super(props);
 
-        const userId = this.props.userId.toString();
+        const receiverId = this.props.receiverId.toString();
         this.state = {
-            messages: userId in this.props.all_ms ? this.props.all_ms[userId] : [],
+            messages: receiverId in this.props.all_ms ? this.props.all_ms[receiverId] : [],
             inputBarText: '',
         }
     }
 
     componentDidMount() {
-        if (!(this.props.userId.toString() in this.props.all_ms)) {
-            this.props.getChat(this.props.userId.toString());
+        if (!(this.props.receiverId.toString() in this.props.all_ms)) {
+            this.props.getChat(this.props.receiverId.toString());
         }
         setTimeout(() => this.scrollView.scrollToEnd());
     }
@@ -32,10 +33,10 @@ class ChatView extends Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        const userId = this.props.userId.toString();
-        if (userId in this.props.all_ms && this.props.all_ms[userId] !== this.state.messages) {
+        const receiverId = this.props.receiverId.toString();
+        if (receiverId in this.props.all_ms && this.props.all_ms[receiverId] !== this.state.messages) {
             this.setState({
-                messages: this.props.all_ms[userId],
+                messages: this.props.all_ms[receiverId],
             });
             setTimeout(() => this.scrollView.scrollToEnd(), 20);
         }
@@ -46,22 +47,18 @@ class ChatView extends Component {
 
         if (message) {
             this.props.addMessage(
-                {
-                    direction: "right",
-                    text: message,
-                    datetime: new Date(),
-                    created_timestamp: Math.floor(Date.now() / 1000),
-                    sent: false,
-                    id: 0,
-                }, this.props.userId
+                new TextChatMessage(
+                    message,
+                    "right",
+                    this.props.receiverId)
             );
 
             this.setState({
                 inputBarText: ''
             });
-        }
 
-        Keyboard.dismiss()
+            Keyboard.dismiss()
+        }
     }
 
     _onChangeInputBarText(text) {
@@ -99,7 +96,7 @@ class ChatView extends Component {
                                   datetime={new Date()}
                                   sent={true}
                                   content={<ImageContent key={1000}/>}
-        />)
+        />);
 
         return (
             <View style={chatInputStyles.outer}>
@@ -123,6 +120,7 @@ class ChatView extends Component {
 const mapStateToProps = state => ({
     all_ms: state.chat.messages,
     ws: state.chat.webSocket,
+    userId: state.auth.userId,
 });
 
 

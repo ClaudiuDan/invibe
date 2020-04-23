@@ -54,7 +54,6 @@ export class ImageContent extends Component {
     render() {
         return (
             <TouchableOpacity
-                key={this.props.key}
                 style={{borderRadius: 15, marginTop: 4, marginBottom: 5, width: 250, height: 120}}
             >
                 <Lightbox navigator={this.props.navigation}

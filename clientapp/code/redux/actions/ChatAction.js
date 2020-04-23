@@ -1,8 +1,9 @@
 import Axios from "axios";
 import {ADD_CHAT, ADD_MESSAGE, SET_CHAT, SET_CHATSLIST, UPDATE_MESSAGE} from "../actions/Types";
 import {ADD_WEBSOCKET_CONNECTION, DELETE_CHAT, RETRY_MESSAGES} from "./Types";
-import {parseISOString} from "../../Utils/Utils";
 import {AsyncStorage} from "react-native";
+import {parseISOString} from "../../Utils/Utils";
+import TextChatMessage from "../../chat/TextChatMessage";
 
 const WebSocketURL = 'wss://invibes.herokuapp.com/chat/';
 
@@ -118,9 +119,9 @@ export const getChat = (receiver) => dispatch => {
             messages
                 .forEach(message => {
                     if (message.sender.toString() === receiver.toString()) {
-                        new_messages.push(messageFromHTTPData('left', message))
+                        new_messages.push(messageFromHTTPData('left', message).getDictionary())
                     } else {
-                        new_messages.push(messageFromHTTPData('right', message))
+                        new_messages.push(messageFromHTTPData('right', message).getDictionary())
                     }
                 });
 
@@ -139,16 +140,15 @@ export const getChat = (receiver) => dispatch => {
 };
 
 
-export const addMessage = (message, receiver) => dispatch => {
+export const addMessage = (message) => dispatch => {
     dispatch({
         type: ADD_MESSAGE,
         payload: {
-            receiver: receiver,
             message: message,
         }
     });
 
-    addMessageToStorage(receiver, message);
+    addMessageToStorage(message);
 };
 
 
@@ -177,32 +177,26 @@ export const openWebSocketForChat = () => dispatch => {
     ws.onmessage = (message) => {
         const messageData = JSON.parse(message.data);
         let new_message = {};
-        let receiver = '';
         if (messageData.type === 'message_echo') {
             new_message = messageFromHTTPData('right', messageData);
-            receiver = messageData.receiver.toString();
             dispatch({
                 type: UPDATE_MESSAGE,
                 payload: {
-                    receiver: receiver,
                     message: new_message,
                 }
             });
 
-            updateMessageInStorage(receiver, new_message);
+            updateMessageInStorage(new_message.receiver, new_message);
         } else if (messageData.type === 'new_message') {
             new_message = messageFromHTTPData('left', messageData);
-            receiver = messageData.sender.toString();
-            console.log("New message from ", receiver);
             dispatch({
                 type: ADD_MESSAGE,
                 payload: {
-                    receiver: receiver,
                     message: new_message,
                 }
             });
 
-            addMessageToStorage(receiver, new_message);
+            addMessageToStorage(new_message.receiver, new_message);
         } else if (messageData.type === '__pong__') {
             clearTimeout(closeConnection);
             setTimeout(() => {
@@ -227,14 +221,18 @@ export const openWebSocketForChat = () => dispatch => {
 };
 
 const messageFromHTTPData = (direction, data) => {
-    return {
-        direction: direction,
-        text: data.text,
-        datetime: parseISOString(data.datetime),
-        sent: true,
-        created_timestamp: data.created_timestamp,
-        id: data.id
-    }
+    // Always text message for now
+    // if (data.messageType.toString() === "textMessage") {
+    const receiver =  direction === "left" ? data.sender : data.receiver;
+    return new TextChatMessage(
+        data.text,
+        direction,
+        receiver,
+        true,
+        parseISOString(data.datetime),
+        data.created_timestamp,
+        data.id
+    );
 };
 
 
@@ -254,7 +252,7 @@ const updateMessageInStorage = (receiver, message) => {
         chat => {
             const parsedChat = JSON.parse(chat);
             let i = parsedChat.length - 1;
-            while (i >= 0 && parsedChat[i].created_timestamp && parsedChat[i].created_timestamp.toString() !== message.created_timestamp.toString()) {
+            while (i >= 0 && parsedChat[i].createdTimestamp && parsedChat[i].createdTimestamp.toString() !== message.createdTimestamp.toString()) {
                 i--;
             }
             if (i !== -1) {
@@ -268,14 +266,14 @@ const updateMessageInStorage = (receiver, message) => {
 
 // TODO: Keep messages sorted by datetime
 // TODO: Consider storing the messages individually to improve the update performance(or probably better in batches)
-const addMessageToStorage = (receiver, message) => {
-    const key = 'chat-' + receiver.toString();
+const addMessageToStorage = (message) => {
+    const key = 'chat-' + message.receiver.toString();
     retrieveFromLocalStorage(key,
         chat =>
             saveToLocalStorage(key,
                 JSON.stringify([...JSON.parse(chat), message]),
-                'Could not save the message for receiver ' + receiver.toString()),
-        'Could not get the chat for receiver ' + receiver.toString())
+                'Could not save the message for receiver ' + message.receiver.toString()),
+        'Could not get the chat for receiver ' + message.receiver.toString())
 };
 
 const addChatToStorage = (chat) =>

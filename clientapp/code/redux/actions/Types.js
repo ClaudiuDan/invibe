@@ -2,6 +2,7 @@
 export const SIGN_IN = 'SIGN_IN';
 export const SIGN_OUT = 'SIGN_OUT';
 export const RESTORE_TOKEN = 'RESTORE_TOKEN';
+export const RESTORE_USERID = 'RESTORE_USERID';
 // CHAT ACTIONS
 export const SET_CHATSLIST = 'SET_CHATSLIST';
 export const ADD_CHAT = 'ADD_CHAT';

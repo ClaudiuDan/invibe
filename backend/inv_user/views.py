@@ -39,9 +39,10 @@ class CreateInvUserAPIView(CreateAPIView):
         headers = self.get_success_headers(serializer.data)
         # Token to be used for future auth request validations
         token = Token.objects.create(user=serializer.instance)
-        token_data = {"token": token.key}
+        response_data = {"token": token.key,
+                         "userId": token.user.pk}
         return Response(
-            {**serializer.data, **token_data},
+            {**serializer.data, **response_data},
             status=status.HTTP_201_CREATED,
             headers=headers
         )

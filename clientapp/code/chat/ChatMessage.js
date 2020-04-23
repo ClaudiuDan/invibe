@@ -1,10 +1,10 @@
-class ChatMessage {
+export default class ChatMessage {
     constructor(direction,
-                sender,
                 receiver,
+                sent = false,
                 datetime = new Date(),
                 createdTimestamp = Math.floor(Date.now() / 1000),
-                sent = false, id = Math.floor(Math.random() * 1e9)
+                id = Math.floor(Math.random() * 1e9)
     ) {
 
         if (new.target === ChatMessage) {
@@ -15,7 +15,6 @@ class ChatMessage {
         this._createdTimestamp = createdTimestamp;
         this._sent = sent;
         this._id = id;
-        this._sender = sender;
         this._receiver = receiver;
     }
 
@@ -24,7 +23,9 @@ class ChatMessage {
             return false;
         }
 
-        return this._sender === chatMessage.sender && this._createdTimestamp === chatMessage.createdTimestamp;
+
+        return (this._direction === "right" && this._createdTimestamp === chatMessage.createdTimestamp) || // Own message, not always has a db generated id
+            (this._direction === "left" && this._id === chatMessage.id);
     }
 
     getDictionary() {
@@ -35,10 +36,6 @@ class ChatMessage {
             sent: this._sent,
             id: this._id,
         }
-    }
-
-    get sender() {
-        return this._sender;
     }
 
     get receiver() {
