@@ -22,6 +22,7 @@ class LoginInvUserAPIView(ObtainAuthToken):
         result = super().post(request)
         token = Token.objects.get(key=result.data['token'])
         update_last_login(None, token.user)
+        result.data['userId'] = token.user.pk
         return result
 
 
@@ -50,9 +51,9 @@ class FacebookLogin(SocialLoginView):
 
     def post(self, request, *args, **kwargs):
         result = super().post(request)
-        print(result.data)
         token = Token.objects.get(key=result.data['key'])
-        print(token)
+        result.data['userId'] = token.user.pk
+        
         return result
 
 
