@@ -47,7 +47,7 @@ export const chatInputStyles = StyleSheet.create({
         backgroundColor:  chatColour
     },
 
-    //MessageBubble
+    //MessageBox
 
     messageBubble: {
         borderRadius: 20,

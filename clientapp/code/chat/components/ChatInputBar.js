@@ -1,10 +1,10 @@
 //The bar at the bottom with a textbox and a send button.
 import React, {Component} from "react";
-import {Text, TextInput, TouchableHighlight, View} from "react-native";
-import {chatInputStyles} from "./styles/ChatInputStyles";
-import ImagePickerView from "./ImagePickerView";
+import {TextInput, View} from "react-native";
+import {chatInputStyles} from "../styles/ChatInputStyles";
+import ImagePickerView from "./ImagePicker";
 import {Icon} from "react-native-elements";
-import {chatColour, chatSelectedColour} from "./styles/ChatsScreenStyles";
+import {chatColour, chatSelectedColour} from "../styles/ChatsScreenStyles";
 
 export class InputBar extends Component {
 
@@ -16,7 +16,7 @@ export class InputBar extends Component {
                            onChangeText={(text) => this.props.onChangeText(text)}
                            onContentSizeChange={this.props.onSizeChange}
                            value={this.props.text}/>
-                    <ImagePickerView/>
+                <ImagePickerView/>
                 <Icon
                     reverse
                     name='send'

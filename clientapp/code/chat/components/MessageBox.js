@@ -1,11 +1,11 @@
 //The bubbles that appear on the left or the right for the messages.
 import React, {Component} from "react";
 import {Image, Text, TouchableOpacity, View} from "react-native";
-import {chatInputStyles} from "./styles/ChatInputStyles";
-import {formatAMPM} from "../Utils/Utils";
+import {chatInputStyles} from "../styles/ChatInputStyles";
+import {formatAMPM} from "../../Utils/Utils";
 import Lightbox from "react-native-lightbox";
 
-export class MessageBubble extends Component {
+export class MessageBox extends Component {
     render() {
 
         const leftSpacer = this.props.direction === "left" ? null : <View style={{width: 70}}/>;

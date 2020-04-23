@@ -2,9 +2,9 @@ import React, {Component} from 'react';
 import {Icon} from 'react-native-elements'
 import * as ImagePicker from 'expo-image-picker';
 import {connectActionSheet} from '@expo/react-native-action-sheet'
-import {chatColour, chatSelectedColour} from "./styles/ChatsScreenStyles";
+import {chatColour, chatSelectedColour} from "../styles/ChatsScreenStyles";
 
-class ImagePickerView extends Component {
+class ImagePicker extends Component {
 
     constructor(props) {
         super(props);
@@ -83,4 +83,4 @@ class ImagePickerView extends Component {
     }
 }
 
-export default connectActionSheet(ImagePickerView);
+export default connectActionSheet(ImagePicker);

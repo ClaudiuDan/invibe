@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import ChatView from "../chat/ChatView";
+import ChatView from "../chat/components/ChatView";
 
 class U2UChatScreen extends Component {
     constructor(props) {
