@@ -11,6 +11,7 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from allauth.socialaccount.providers.facebook.views import FacebookOAuth2Adapter
 from rest_auth.registration.views import SocialLoginView, SocialConnectView
 
+# I think we can delete this?
 User = get_user_model()
 
 
@@ -53,12 +54,16 @@ class FacebookLogin(SocialLoginView):
         result = super().post(request)
         token = Token.objects.get(key=result.data['key'])
         result.data['userId'] = token.user.pk
-        
+
         return result
 
 
 class FacebookConnect(SocialConnectView):
     adapter_class = FacebookOAuth2Adapter
+
+    def process_login(self):
+        super().process_login()
+        print("aici")
 
 
 class LogoutInvUserAPIView(APIView):

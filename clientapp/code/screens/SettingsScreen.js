@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import { Button, View } from "react-native";
 import {connect} from "react-redux";
-import {signOut} from "../redux/actions/AuthAction";
+import {signOut, socialConnect} from "../redux/actions/AuthAction";
+import {handleFacebookSocialRequest} from "../Utils/SocialUtils"
 
 class SettingsScreen extends Component {
     render() {
@@ -12,6 +13,10 @@ class SettingsScreen extends Component {
                     onPress={() => this.props.navigation.navigate('Home')}
                 />
                 <Button
+                    title="Connect Facebook"
+                    onPress={() => handleFacebookSocialRequest(this.props.socialConnect)}
+                />
+                <Button
                     title="Sign Out"
                     onPress={() => this.props.signOut()}
                 />
@@ -20,4 +25,4 @@ class SettingsScreen extends Component {
     }
 }
 
-export default connect(null, {signOut})(SettingsScreen);
+export default connect(null, {signOut, socialConnect})(SettingsScreen);

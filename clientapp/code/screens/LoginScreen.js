@@ -8,10 +8,8 @@ import {
 import {connect} from 'react-redux';
 import {signIn} from "../redux/actions/AuthAction";
 import {socialRegister} from "../redux/actions/AuthAction";
-
+import {handleFacebookSocialRequest} from "../Utils/SocialUtils"
 import {Text} from "react-native";
-import * as Facebook from 'expo-facebook';
-import { Alert } from 'react-native';
 
 class LoginScreen extends Component {
 
@@ -38,36 +36,6 @@ class LoginScreen extends Component {
 
   get = () => {
     this.props.signIn(this.state.email, this.state.password);
-  };
-  
-  handleSocialRequest = () => {
-    this.props.socialRegister(this.state.token);
-  };
-
-  async socialLogin() {
-    try {
-      await Facebook.initializeAsync('530323767560533');
-      const {
-        // type cancel/success,
-        // expires is the lifetime of the token (this is a problem)
-        type,
-        token,
-        expires
-      } = await Facebook.logInWithReadPermissionsAsync({
-        permissions: ['public_profile', 'email'],
-      });
-      if (type === 'success') {
-        // Get the user's name using Facebook's Graph API
-        const response = await fetch(`https://graph.facebook.com/me?access_token=${token}`);
-        this.setState({token:token});
-        this.handleSocialRequest();
-        Alert.alert('Logged in!', `Hi ${(await response.json()).name}!`);
-      } else {
-        // type === 'cancel'
-      }
-    } catch ({ message }) {
-      alert(`Facebook Login Error: ${message}`);
-    }
   }
 
   render() {
@@ -91,7 +59,7 @@ class LoginScreen extends Component {
               Register
           </Text>
           <Button
-            onPress={this.socialLogin.bind(this)}
+            onPress={() => handleFacebookSocialRequest(this.props.socialRegister)}
             title="Facebook login"
           />
       </ScrollView>

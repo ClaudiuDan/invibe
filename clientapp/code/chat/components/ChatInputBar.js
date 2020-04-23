@@ -2,7 +2,7 @@
 import React, {Component} from "react";
 import {TextInput, View} from "react-native";
 import {chatInputStyles} from "../styles/ChatInputStyles";
-import ImagePickerView from "./ImagePicker";
+import ImagePickerView from "./ImageCameraOrGalleryPicker";
 import {Icon} from "react-native-elements";
 import {chatColour, chatSelectedColour} from "../styles/ChatsScreenStyles";
 

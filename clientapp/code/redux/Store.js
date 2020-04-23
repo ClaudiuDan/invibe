@@ -7,6 +7,7 @@ const initialState = {
         {
             isLoading: true,
             userToken: null,
+            userId: 0,
         },
     chat: {
         chatsList: [],

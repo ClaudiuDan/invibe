@@ -18,12 +18,13 @@ class ChatMessage {
         this._sender = sender;
         this._receiver = receiver;
     }
+
     isEqual(chatMessage) {
         if (!chatMessage) {
             return false;
         }
 
-        return this.
+        return this._sender === chatMessage.sender && this._createdTimestamp === chatMessage.createdTimestamp;
     }
 
     getDictionary() {

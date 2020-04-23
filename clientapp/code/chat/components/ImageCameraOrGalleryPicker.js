@@ -4,7 +4,7 @@ import * as ImagePicker from 'expo-image-picker';
 import {connectActionSheet} from '@expo/react-native-action-sheet'
 import {chatColour, chatSelectedColour} from "../styles/ChatsScreenStyles";
 
-class ImagePicker extends Component {
+class ImageCameraOrGalleryPicker extends Component {
 
     constructor(props) {
         super(props);
@@ -83,4 +83,4 @@ class ImagePicker extends Component {
     }
 }
 
-export default connectActionSheet(ImagePicker);
+export default connectActionSheet(ImageCameraOrGalleryPicker);
