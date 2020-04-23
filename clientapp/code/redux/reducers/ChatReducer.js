@@ -2,51 +2,81 @@ import {
     ADD_CHAT,
     ADD_MESSAGE,
     ADD_WEBSOCKET_CONNECTION,
-    DELETE_CHAT, RETRY_MESSAGES,
+    DELETE_CHAT,
+    RETRY_MESSAGES,
     SET_CHAT,
     SET_CHATSLIST,
     UPDATE_MESSAGE
 } from "../actions/Types";
+import ChatsList from "../../chat/classes/ChatsList";
+import ChatInfo from "../../chat/classes/ChatInfo";
 
 function chatReducer(state = {}, action) {
     let receiver = null;
-    let index = 0;
+    let chat = null;
+    let chatsList = state.chatsList ? state.chatsList.chatsInfo : null;
+    let message = null;
+
     switch (action.type) {
         case SET_CHATSLIST:
             return {
                 ...state,
-                chatsList: action.payload.chatsList,
+                chatsList: new ChatsList(action.payload.chats)
             };
 
         case ADD_CHAT:
+            chat = action.payload.chat;
+
+            let currMessagesKeys = [];
+            let currMessages = [];
+            if (receiver in chatsList) {
+                currMessagesKeys = chatsList[receiver].messagesKeys;
+                currMessages = chatsList[receiver].messages;
+            }
+
             return {
                 ...state,
-                chatsList: [action.payload.chat, ...state.chatsList]
+                chatsList: new ChatsList({
+                    ...state.chatsList.chatsInfo,
+                    [chat.receiver.toString()]: new ChatInfo(chat.receiver,
+                        chat.id,
+                        state.chatsList.maxOrd + 1,
+                        currMessagesKeys,
+                        currMessages)
+                })
             };
 
         case DELETE_CHAT:
-            const chatsList = state.chatsList;
-            index = chatsList.findIndex(chat => chat.id.toString() === action.payload.id.toString());
-            if (index !== -1) {
-                return {
-                    ...state,
-                    chatsList: [...chatsList.slice(0, index), ...chatsList.slice(index + 1)]
-                };
+            receiver = action.payload.receiver;
+            if (!(receiver in chatsList)) {
+                return state;
             }
-            return state;
-
-        case SET_CHAT:
+            delete chatsList[receiver];
             return {
                 ...state,
-                messages: {
-                    ...state.messages,
-                    [action.payload.receiver]: action.payload.chat, // [key]: Computed property names
-                }
+                chatsList: new ChatsList({...chatsList})
+            };
+
+        case SET_CHAT:
+            receiver = action.payload.receiver.toString();
+            let id = 0;
+            let ord = state.chatsList.maxOrd + 1;
+            if (receiver in chatsList) {
+                id = chatsList[receiver].id;
+                ord = chatsList[receiver].ord;
+            }
+
+            chatsList[receiver] = new ChatInfo(receiver, id, ord,
+                ChatInfo.getMessageKeysFromMessages(action.payload.chat), action.payload.chat);
+
+            return {
+                ...state,
+                chatsList: new ChatsList({...chatsList})
             };
 
         case RETRY_MESSAGES:
-            for (receiver in state.messages) {
-                state.messages[receiver].forEach(msg => {
+            for (receiver in chatsList) {
+                chatsList[receiver].messages.forEach(msg => {
                     if (!msg.sent) {
                         sendMessageViaWebSocket(msg, state.webSocket, receiver);
                     }
@@ -56,35 +86,30 @@ function chatReducer(state = {}, action) {
             return state;
 
         case ADD_MESSAGE:
-            receiver = action.payload.message.receiver;
-            sendMessageViaWebSocket(action.payload.message, state.webSocket, receiver);
+            receiver = action.payload.message.receiver.toString();
+            message = action.payload.message;
 
-            const old_messages = receiver in state.messages ? state.messages[receiver] : [];
+            if (message.direction === "right") {
+                sendMessageViaWebSocket(action.payload.message, state.webSocket, receiver);
+            }
+            chatsList[receiver] = new ChatInfo(receiver, chatsList[receiver].id, chatsList.maxOrd + 1,
+                [...chatsList[receiver].messagesKeys, message.getUniqueKey()],
+                [...chatsList[receiver].messages, message]);
+
             return {
                 ...state,
-                messages: {
-                    ...state.messages,
-                    [receiver]: [...old_messages, action.payload.message]
-                }
+                chatsList: new ChatsList({...chatsList})
             };
 
         case UPDATE_MESSAGE:
-            receiver = action.payload.message.receiver;
-            // TODO: Consider doing binary search if stored sorted by datetime
-            // TODO: the frontend_id is not stored in the db in a persistent way, consider checking for id as well(maybe improve this design)
-            const messages = receiver in state.messages ? state.messages[receiver] : [];
-            const message = action.payload.message;
-            index = messages.findIndex((msg) => msg.createdTimestamp && msg.createdTimestamp.toString() === message.createdTimestamp.toString());
-            if (index !== -1) {
-                return {
-                    ...state,
-                    messages: {
-                        ...state.messages,
-                        [receiver]: [...messages.slice(0, index), message, ...messages.slice(index + 1)]
-                    }
-                };
-            }
-            return state;
+            message = action.payload.message;
+            chatsList[message.receiver] = chatsList[message.receiver].updateMessage(message);
+
+            return {
+                ...state,
+                chatsList: new ChatsList({...chatsList})
+            };
+
         case ADD_WEBSOCKET_CONNECTION:
             return {
                 ...state,

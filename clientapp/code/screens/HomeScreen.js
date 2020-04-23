@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import {Button, View} from "react-native";
 import {connect} from "react-redux";
-import {openWebSocketForChat, restoreChatsList} from "../redux/actions/ChatAction";
+import {openWebSocketForChat, retrieveChatsList} from "../redux/actions/ChatAction";
 
 class HomeScreen extends Component {
 
@@ -15,7 +15,7 @@ class HomeScreen extends Component {
     }
 
     componentDidMount() {
-        this.props.restoreChatsList();
+        this.props.retrieveChatsList();
         this.props.openWebSocketForChat();
     }
 
@@ -44,4 +44,4 @@ const mapStateToProps = state => ({
     chatsList: state.chat.chatsList,
 });
 
-export default connect(mapStateToProps, {restoreChatsList, openWebSocketForChat})(HomeScreen);
+export default connect(mapStateToProps, {openWebSocketForChat, retrieveChatsList})(HomeScreen);

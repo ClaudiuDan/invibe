@@ -1,42 +1,41 @@
 import React, {Component} from 'react';
 import {Keyboard, ScrollView, View,} from 'react-native';
 import {connect} from "react-redux";
-import {addMessage, getChat} from "../../redux/actions/ChatAction";
+import {addMessage, getChat, retrieveChat} from "../../redux/actions/ChatAction";
 import {chatInputStyles} from "../styles/ChatInputStyles";
-import {ImageContent, MessageBox, TextContent} from "./MessageBox";
 import {InputBar} from "./ChatInputBar";
-import TextChatMessage from "../TextChatMessage";
+import TextChatMessage from "../classes/TextChatMessage";
 
 class ChatView extends Component {
 
     constructor(props) {
         super(props);
 
-        const receiverId = this.props.receiverId.toString();
         this.state = {
-            messages: receiverId in this.props.all_ms ? this.props.all_ms[receiverId] : [],
+            chatInfo: this.props.chatsList.chatsInfo[this.props.receiverId],
             inputBarText: '',
-        }
+        };
+        console.log(this.state.chatInfo);
+        this.props.retrieveChat(this.state.chatInfo);
     }
 
     componentDidMount() {
-        if (!(this.props.receiverId.toString() in this.props.all_ms)) {
-            this.props.getChat(this.props.receiverId.toString());
+        if (!this.state.chatInfo.messages.length) {
+            this.props.getChat(this.props.receiverId);
         }
         setTimeout(() => this.scrollView.scrollToEnd());
     }
 
     static getDerivedStateFromProps(nextProps) {
         return {
-            all_ms: nextProps.all_ms,
+            chatsList: nextProps.chatsList,
         }
     }
 
-    componentDidUpdate(prevProps, prevState) {
-        const receiverId = this.props.receiverId.toString();
-        if (receiverId in this.props.all_ms && this.props.all_ms[receiverId] !== this.state.messages) {
+    componentDidUpdate() {
+        if (this.props.chatsList.chatsInfo[this.props.receiverId] !== this.state.chatInfo) {
             this.setState({
-                messages: this.props.all_ms[receiverId],
+                chatInfo: this.props.chatsList.chatsInfo[this.props.receiverId],
             });
             setTimeout(() => this.scrollView.scrollToEnd(), 20);
         }
@@ -77,26 +76,14 @@ class ChatView extends Component {
 
     render() {
 
-        const messages = [];
-
-        this.state.messages.forEach((message, index) => {
-            messages.push(
-                <MessageBox key={index}
-                            direction={message.direction}
-                            text={message.text}
-                            datetime={message.datetime}
-                            sent={message.sent}
-                            content={<TextContent text={message.text} direction={message.direction}/>}
-                />
-            );
-        });
-        messages.push(<MessageBox key={100}
-                                  direction={"right"}
-                                  text={""}
-                                  datetime={new Date()}
-                                  sent={true}
-                                  content={<ImageContent key={1000}/>}
-        />);
+        const messages = this.state.chatInfo.messages.map((message, index) => message.getComponentToRender(index));
+        // messages.push(<MessageBox key={100}
+        //                           direction={"right"}
+        //                           text={""}
+        //                           datetime={new Date()}
+        //                           sent={true}
+        //                           content={<ImageContent key={1000}/>}
+        // />);
 
         return (
             <View style={chatInputStyles.outer}>
@@ -118,11 +105,11 @@ class ChatView extends Component {
 
 
 const mapStateToProps = state => ({
-    all_ms: state.chat.messages,
+    chatsList: state.chat.chatsList,
     ws: state.chat.webSocket,
     userId: state.auth.userId,
 });
 
 
-export default connect(mapStateToProps, {getChat, addMessage})(ChatView);
+export default connect(mapStateToProps, {getChat, addMessage, retrieveChat})(ChatView);
 

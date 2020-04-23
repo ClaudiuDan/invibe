@@ -1,45 +1,39 @@
 import Axios from "axios";
 import {ADD_CHAT, ADD_MESSAGE, SET_CHAT, SET_CHATSLIST, UPDATE_MESSAGE} from "../actions/Types";
 import {ADD_WEBSOCKET_CONNECTION, DELETE_CHAT, RETRY_MESSAGES} from "./Types";
-import {AsyncStorage} from "react-native";
 import {parseISOString} from "../../Utils/Utils";
-import TextChatMessage from "../../chat/TextChatMessage";
+import TextChatMessage from "../../chat/classes/TextChatMessage";
+import ChatInfo from "../../chat/classes/ChatInfo";
+import ChatsList from "../../chat/classes/ChatsList";
 
 const WebSocketURL = 'wss://invibes.herokuapp.com/chat/';
 
-export const restoreChatsList = () => dispatch =>
-    retrieveFromLocalStorage('chatsList', chatsList => {
-            const chats = JSON.parse(chatsList);
-            chats.forEach(chat => restoreChat(chat.receiver));
-
-            dispatch({
-                type: SET_CHATSLIST,
-                payload: {
-                    chatsList: chats,
-                }
-            })
-        },
-        'Could not restore chatslist from storage.');
+export const retrieveChatsList = () => dispatch => {
+    ChatsList.retrieve().then(chats =>{
+        dispatch({
+            type: SET_CHATSLIST,
+            payload: {
+                chats: chats,
+            }
+        })}
+    );
+};
 
 export const getChatsList = () => dispatch => {
     Axios
         .get(`/chat/active_chats/`)
         .then(response => {
-            const chatsList = [];
-            JSON.parse(response.data).chats
-                .forEach(chat => {
-                    chatsList.push({
-                        id: chat.id,
-                        receiver: chat.receiver
-                    })
+            const parsedChats = JSON.parse(response.data).chats;
+            const chats = {};
+            parsedChats
+                .forEach((chat, index) => {
+                    chats[chat.receiver] = new ChatInfo(chat.receiver, chat.id, parsedChats.length - index);
                 });
-
-            saveToLocalStorage('chatsList', JSON.stringify(chatsList), 'Could not save the chatsList.');
 
             dispatch({
                 type: SET_CHATSLIST,
                 payload: {
-                    chatsList: chatsList,
+                    chats: chats,
                 }
             })
 
@@ -50,19 +44,22 @@ export const getChatsList = () => dispatch => {
 
 //TODO: Check if the chat is already in the list
 export const addChat = (receiver) => dispatch => {
+    dispatch({
+        type: ADD_CHAT,
+        payload: {
+            chat: {receiver: receiver, id: 0},
+        }
+    });
+
     Axios
         .post(`/chat/active_chats/`, {receiver: receiver})
         .then(response => {
                 const chat = JSON.parse(response.data);
-                const new_chat = {
-                    id: chat.id,
-                    receiver: chat.receiver
-                };
-                addChatToStorage(new_chat);
+
                 dispatch({
                     type: ADD_CHAT,
                     payload: {
-                        chat: new_chat,
+                        chat: chat,
                     }
                 })
             }
@@ -70,43 +67,18 @@ export const addChat = (receiver) => dispatch => {
         .catch(error => console.log(error));
 };
 
-export const deleteChat = (id) => dispatch => {
+export const deleteChat = (chat) => dispatch => {
     Axios
-        .delete(`/chat/active_chats/`, {params: {id: id}})
+        .delete(`/chat/active_chats/`, {params: {id: chat.id}})
         .catch(error => console.log(error));
-
-    retrieveFromLocalStorage('chatsList', chatList => {
-            const parsedChatList = JSON.parse(chatList);
-            const index = parsedChatList.findIndex(chat => chat.id.toString() === id.toString())
-            if (index !== -1) {
-                saveToLocalStorage(
-                    'chatList',
-                    JSON.stringify([...parsedChatList.slice(0, index), ...parsedChatList.slice(index + 1)]),
-                    'Could not save the chat');
-            }
-        },
-        'Could not get the chatList.');
 
     dispatch({
         type: DELETE_CHAT,
         payload: {
-            id: id,
+            receiver: chat.receiver,
         }
     })
 };
-
-export const restoreChat = (receiver) => dispatch =>
-    retrieveFromLocalStorage('chat-' + receiver.toString(),
-        chat =>
-            dispatch({
-                type: SET_CHAT,
-                payload: {
-                    receiver: receiver,
-                    chat: JSON.parse(chat),
-                }
-            }),
-        'Could not restore chat.');
-
 
 // TODO: Consider storing only the last n messages in the storage(Consider doing the same for the backend call)
 // TODO: Consider adding to the current list of chats(or updating it) instead of replacing it
@@ -114,19 +86,15 @@ export const getChat = (receiver) => dispatch => {
     Axios
         .get(`/chat/get_chat/`, {params: {receiver: receiver}})
         .then(response => {
-            const messages = JSON.parse(response.data).messages;
             const new_messages = [];
-            messages
+            JSON.parse(response.data).messages
                 .forEach(message => {
                     if (message.sender.toString() === receiver.toString()) {
-                        new_messages.push(messageFromHTTPData('left', message).getDictionary())
+                        new_messages.push(messageFromHTTPData('left', message))
                     } else {
-                        new_messages.push(messageFromHTTPData('right', message).getDictionary())
+                        new_messages.push(messageFromHTTPData('right', message))
                     }
                 });
-
-            saveToLocalStorage('chat-' + receiver.toString(), JSON.stringify(new_messages),
-                'Could not save the chat for receiver ' + receiver.toString() + '.');
 
             dispatch({
                 type: SET_CHAT,
@@ -139,6 +107,18 @@ export const getChat = (receiver) => dispatch => {
         .catch(error => console.log(error));
 };
 
+export const retrieveChat = (chatInfo) => dispatch => {
+    chatInfo.retrieveMessages().then(chat =>
+        dispatch({
+            type: SET_CHAT,
+            payload: {
+                receiver: chatInfo.receiver,
+                chat: chat,
+            }
+        })
+    );
+};
+
 
 export const addMessage = (message) => dispatch => {
     dispatch({
@@ -147,8 +127,6 @@ export const addMessage = (message) => dispatch => {
             message: message,
         }
     });
-
-    addMessageToStorage(message);
 };
 
 
@@ -186,7 +164,6 @@ export const openWebSocketForChat = () => dispatch => {
                 }
             });
 
-            updateMessageInStorage(new_message.receiver, new_message);
         } else if (messageData.type === 'new_message') {
             new_message = messageFromHTTPData('left', messageData);
             dispatch({
@@ -196,7 +173,6 @@ export const openWebSocketForChat = () => dispatch => {
                 }
             });
 
-            addMessageToStorage(new_message.receiver, new_message);
         } else if (messageData.type === '__pong__') {
             clearTimeout(closeConnection);
             setTimeout(() => {
@@ -223,7 +199,7 @@ export const openWebSocketForChat = () => dispatch => {
 const messageFromHTTPData = (direction, data) => {
     // Always text message for now
     // if (data.messageType.toString() === "textMessage") {
-    const receiver =  direction === "left" ? data.sender : data.receiver;
+    const receiver = direction === "left" ? data.sender : data.receiver;
     return new TextChatMessage(
         data.text,
         direction,
@@ -234,51 +210,3 @@ const messageFromHTTPData = (direction, data) => {
         data.id
     );
 };
-
-
-const saveToLocalStorage = async (key, data, errText) =>
-    await AsyncStorage.setItem(key, data).catch(err => console.log(errText, err));
-
-
-const retrieveFromLocalStorage = async (key, callback, errText) =>
-    await AsyncStorage.getItem(key).then(value => {
-        if (value) callback(value)
-    })
-        .catch(err => console.log(errText, err));
-
-const updateMessageInStorage = (receiver, message) => {
-    const key = 'chat-' + receiver.toString();
-    retrieveFromLocalStorage(key,
-        chat => {
-            const parsedChat = JSON.parse(chat);
-            let i = parsedChat.length - 1;
-            while (i >= 0 && parsedChat[i].createdTimestamp && parsedChat[i].createdTimestamp.toString() !== message.createdTimestamp.toString()) {
-                i--;
-            }
-            if (i !== -1) {
-                saveToLocalStorage(key,
-                    JSON.stringify([...parsedChat.splice(0, i), message, ...parsedChat.splice(i + 1)]),
-                    'Could not save the message for receiver ' + receiver.toString());
-            }
-        },
-        'Could not get the chat for receiver ' + receiver.toString());
-};
-
-// TODO: Keep messages sorted by datetime
-// TODO: Consider storing the messages individually to improve the update performance(or probably better in batches)
-const addMessageToStorage = (message) => {
-    const key = 'chat-' + message.receiver.toString();
-    retrieveFromLocalStorage(key,
-        chat =>
-            saveToLocalStorage(key,
-                JSON.stringify([...JSON.parse(chat), message]),
-                'Could not save the message for receiver ' + message.receiver.toString()),
-        'Could not get the chat for receiver ' + message.receiver.toString())
-};
-
-const addChatToStorage = (chat) =>
-    retrieveFromLocalStorage('chatsList',
-        chatList =>
-            saveToLocalStorage('chatList', JSON.stringify([chat, ...JSON.parse(chatList)]),
-                'Could not save the chat'),
-        'Could not get the chatList');

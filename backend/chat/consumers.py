@@ -39,10 +39,11 @@ class ChatConsumer(WebsocketConsumer):
                 # Message echo - inform me the message was received by server
                 self.send(json.dumps(replies[1]))
 
-            except IntegrityError:
+            except IntegrityError as e:
                 # Message already in the db, just return the message information
-                message = Message.objects.filter(sender=self.scope["user"], created_timestamp=datetime.fromtimestamp(
-                    data['created_timestamp'])).first()
+                print(e)
+                message = Message.objects.filter(
+                    Q(sender=self.scope["user"], created_timestamp=data['created_timestamp'])).first()
 
                 self.send(json.dumps({
                     'type': 'message_echo',
@@ -67,16 +68,14 @@ class ChatConsumer(WebsocketConsumer):
         async_to_sync(self.channel_layer.group_add)(str(self.scope["user"].pk), self.channel_name)
 
     def _message(self, data):
-
         receiver = User.objects.get(pk=data['receiver'])
 
         new_message = Message.objects.create(
             text=data['text'],
-            created_timestamp=datetime.fromtimestamp(data['created_timestamp']),
+            created_timestamp=data['created_timestamp'],
             sender=self.scope["user"],
             receiver=receiver
         )
-
         new_message.save()
 
         Chat.objects \
@@ -97,7 +96,7 @@ class ChatConsumer(WebsocketConsumer):
             'sender': self.scope["user"].pk,
             'receiver': data['receiver'],
             'text': data['text'],
-            'created_timestamp': data['created_timestamp'],
+            'created_timestamp': new_message.created_timestamp,
             'datetime': json.dumps(new_message.server_received_datetime, cls=DjangoJSONEncoder),
             'id': new_message.pk,
         }

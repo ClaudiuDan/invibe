@@ -2,7 +2,6 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from inv_user.models import User
 from django.utils import timezone
-from django_unixdatetimefield import UnixDateTimeField
 
 
 # Create your models here.
@@ -13,7 +12,7 @@ class Message(models.Model):
                             max_length=1000,
                             null=False,
                             blank=False)
-    created_timestamp = UnixDateTimeField()
+    created_timestamp = models.BigIntegerField()
     server_received_datetime = models.DateTimeField(_('message was received by server at date time'),
                                                     default=timezone.now)
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='message_sender')

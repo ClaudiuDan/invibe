@@ -22,8 +22,8 @@ class ChatsScreen extends Component {
 
         this.state = {
             modalVisible: false,
-            userId: '',
-            chatsList: [],
+            receiverId: '',
+            chatsList: this.props.chatsList,
         }
     }
 
@@ -37,7 +37,7 @@ class ChatsScreen extends Component {
         }
     }
 
-    componentDidUpdate(prevProps, prevState) {
+    componentDidUpdate() {
         if (this.props.chatsList !== this.state.chatsList) {
             this.setState({
                 chatsList: this.props.chatsList,
@@ -49,11 +49,11 @@ class ChatsScreen extends Component {
         this.setState({modalVisible: visible});
     };
 
-    onUserIdChanged(text) {
-        this.setState({userId: text});
+    onReceiverIdChanged(text) {
+        this.setState({receiverId: text});
     }
 
-    openActionSheetDeleteChat = (id) => {
+    openActionSheetDeleteChat = (chat) => {
         const options = ['Delete'];
         const destructiveButtonIndex = 0;
         const cancelButtonIndex = 1;
@@ -66,7 +66,7 @@ class ChatsScreen extends Component {
             },
             buttonIndex => {
                 if (buttonIndex === destructiveButtonIndex) {
-                    this.props.deleteChat(id);
+                    this.props.deleteChat(chat);
                 }
             },
         );
@@ -85,23 +85,7 @@ class ChatsScreen extends Component {
                     }}
                 />
                 <ScrollView style={styles.scrollView}>
-                    {chatsList.map((chat) => {
-                        return (
-                            <View style={styles.chatAndDeleteButton} key={chat.id}>
-                                <TouchableWithoutFeedback
-                                    style={styles.chatTouchable}
-                                    onPress={() => this.props.navigation.navigate('Chat', {receiverId: chat.receiver})}
-                                    onLongPress={() => this.openActionSheetDeleteChat(chat.id)}
-                                >
-                                    <View style={styles.chatView}>
-                                        <Text style={styles.chatViewText}>
-                                            {"Chat with " + chat.receiver}
-                                        </Text>
-                                    </View>
-                                </TouchableWithoutFeedback>
-                            </View>
-                        )
-                    })}
+                    {this.getChatsListComponent(chatsList.chatsInfo)}
                 </ScrollView>
                 <Button
                     title="Go back"
@@ -110,6 +94,29 @@ class ChatsScreen extends Component {
                 />
             </View>
         );
+    }
+
+     getChatsListComponent(chatsList) {
+        const chatsEntries = [];
+        let index = 0;
+        for (const receiver in chatsList) {
+            chatsEntries.push((
+                    <TouchableWithoutFeedback
+                        key={index}
+                        style={styles.chatTouchable}
+                        onPress={() => this.props.navigation.navigate('Chat', {receiverId: receiver})}
+                        onLongPress={() => this.openActionSheetDeleteChat(chatsList[receiver])}
+                    >
+                        <View style={styles.chatView}>
+                            <Text style={styles.chatViewText}>
+                                {"Chat with " + receiver}
+                            </Text>
+                        </View>
+                    </TouchableWithoutFeedback>
+            ));
+            index++;
+        }
+        return chatsEntries;
     }
 
     // Shows the new chat dialog
@@ -124,7 +131,7 @@ class ChatsScreen extends Component {
                         <TextInput
                             style={styles.modalText}
                             placeholder='User Id'
-                            onChangeText={this.onUserIdChanged.bind(this)}
+                            onChangeText={this.onReceiverIdChanged.bind(this)}
                         />
                         <View style={{flexDirection: "row", justifyContent: 'space-between'}}>
                             <TouchableHighlight
@@ -136,8 +143,8 @@ class ChatsScreen extends Component {
                                 }}
                                 onPress={() => {
                                     this.setModalVisible(!modalVisible);
-                                    this.props.addChat(this.state.userId);
-                                    this.props.navigation.navigate('Chat', {userId: this.state.userId});
+                                    this.props.addChat(this.state.receiverId);
+                                    this.props.navigation.navigate('Chat', {receiverId: this.state.receiverId});
                                 }}
                             >
                                 <Text style={styles.textStyle}>Go</Text>

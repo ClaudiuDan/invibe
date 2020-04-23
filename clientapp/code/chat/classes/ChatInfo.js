@@ -1,0 +1,107 @@
+import {retrieveFromLocalStorage, saveToLocalStorage} from "../../Utils/Utils";
+import {retrieveMessage} from "./ChatUtils";
+
+export default class ChatInfo {
+    constructor(receiver, id, ord = 0, messagesKeys = [], messages = []) {
+        this._receiver = receiver.toString();
+        this._id = id;
+        this._messagesKeys = messagesKeys;
+        this._messages = messages;
+        this._ord = ord;
+        this.save();
+    }
+
+    static getMessageKeysFromMessages(messages) {
+        return messages.map(msg => msg.getUniqueKey());
+    }
+
+    static instanceFromDic(dic) {
+        return new ChatInfo(dic.receiver, dic.id, dic.messagesKeys);
+    }
+
+    updateMessage(newMessage) {
+        const index = this._messages.findIndex(msg => msg.getUniqueKey() === newMessage.getUniqueKey());
+        if (index === -1) {
+            return this;
+        }
+        return new ChatInfo(
+            this.receiver,
+            this.id,
+            this.ord,
+            this.messagesKeys,
+            [...this.messages.slice(0, index), newMessage, ...this.messages.slice(index + 1)]
+        );
+    }
+
+    async retrieveMessages() {
+        const messages = [];
+        for (const key in this.messagesKeys) {
+            const message = await retrieveMessage(key);
+            messages.push(message)
+        }
+        return messages;
+    }
+
+    isEqual(chatInfo) {
+        if (!chatInfo) {
+            return false;
+        }
+
+        return this.getUniqueKey() === chatInfo.getUniqueKey();
+    }
+
+    getUniqueKey() {
+        return "chatInfo-" + this._receiver;
+    }
+
+    save() {
+        saveToLocalStorage(
+            this.getUniqueKey(),
+            this.getDictionary(),
+            "Could not save chat info with unique key " + this.getUniqueKey() + " to local storage."
+        );
+    }
+
+    static async retrieve(key) {
+        const value = await retrieveFromLocalStorage(
+            key,
+            "Could not retrieve chat info with unique key " + key + " from local storage."
+        );
+
+        if (!value) {
+            return null;
+        }
+
+        return ChatInfo.instanceFromDic(value);
+    }
+
+    getDictionary() {
+        return {
+            receiver: this._receiver,
+            id: this._id,
+            ord: this._ord,
+            messagesKeys: this._messagesKeys
+        }
+    }
+
+    // Getters and Setters
+    get messagesKeys() {
+        return this._messagesKeys;
+    }
+
+    get id() {
+        return this._id;
+    }
+
+    get messages() {
+        return this._messages;
+    }
+
+    get ord() {
+        return this._ord;
+    }
+
+    get receiver() {
+        return this._receiver;
+    }
+}

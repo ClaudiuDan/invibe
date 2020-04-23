@@ -1,6 +1,7 @@
 import {applyMiddleware, createStore} from "redux";
 import thunk from "redux-thunk";
 import rootReducer from './reducers';
+import ChatsList from "../chat/classes/ChatsList";
 
 const initialState = {
     auth:
@@ -10,8 +11,7 @@ const initialState = {
             userId: 0,
         },
     chat: {
-        chatsList: [],
-        messages: {},
+        chatsList: null,
         webSocket: null,
     }
 };

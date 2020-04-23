@@ -133,6 +133,6 @@ export const restoreUserId = () => dispatch => {
 function saveTokenAndUserIdToSecureStorage(token, userId) {
     SecureStore.setItemAsync('userToken', token)
         .catch((err => console.log("Could not save the auth token.", err)));
-    SecureStore.setItemAsync('userId', userId)
+    SecureStore.setItemAsync('userId', userId.toString())
         .catch((err => console.log("Could not save the auth userId.", err)));
 }
