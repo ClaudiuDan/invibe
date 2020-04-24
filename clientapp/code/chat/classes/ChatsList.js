@@ -2,10 +2,12 @@ import {retrieveFromLocalStorage, saveToLocalStorage} from "../../Utils/Utils";
 import ChatInfo from "./ChatInfo";
 
 export default class ChatsList {
-    constructor(chatsInfo = {}) {
+    constructor(chatsInfo = {}, saveContent = false) {
         this._chatsInfo = chatsInfo;
         this._maxOrd = this.getMaxOrd();
-        this.save();
+        if (saveContent) {
+            this.save();
+        }
     }
 
     getMaxOrd() {
@@ -43,11 +45,18 @@ export default class ChatsList {
             return {};
         }
 
+        const res = {}
+
         for (const receiver in value) {
-            value[receiver] = await ChatInfo.retrieve(value[receiver]);
+            if (value[receiver]) {
+                const chatInfo =  await ChatInfo.retrieve(value[receiver]);
+                if (chatInfo) {
+                    res[receiver] = chatInfo;
+                }
+            }
         }
 
-        return value;
+        return res;
     }
 
     get chatsInfo() {

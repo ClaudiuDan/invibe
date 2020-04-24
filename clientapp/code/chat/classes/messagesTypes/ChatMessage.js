@@ -1,5 +1,6 @@
-import {saveToLocalStorage} from "../../Utils/Utils";
+import {saveToLocalStorage} from "../../../Utils/Utils";
 
+//INFO: When creating a new type of message, you have to add a new case in the ChatUtils functions
 export default class ChatMessage {
     constructor(direction,
                 receiver,
@@ -55,25 +56,18 @@ export default class ChatMessage {
         }
     }
 
+    sendMessageViaWebSocket(_ws) {
+        throw new TypeError("Cannot call sendMessageViaWebSocket of ChatMessage; Must be implemented in child class.");
+    }
+
     getComponentToRender(_key) {
         throw new TypeError("Cannot call getComponentToRender of ChatMessage; Must be implemented in child class.");
     }
 
-    // Getters and Setters
-    set datetime(value) {
-        this._datetime = value;
-    }
+    // Getters
 
     get receiver() {
         return this._receiver;
-    }
-
-    set sent(value) {
-        this._sent = value;
-    }
-
-    set id(value) {
-        this._id = value;
     }
 
     get direction() {

@@ -1,21 +1,23 @@
 import Axios from "axios";
 import {ADD_CHAT, ADD_MESSAGE, SET_CHAT, SET_CHATSLIST, UPDATE_MESSAGE} from "../actions/Types";
 import {ADD_WEBSOCKET_CONNECTION, DELETE_CHAT, RETRY_MESSAGES} from "./Types";
-import {parseISOString} from "../../Utils/Utils";
-import TextChatMessage from "../../chat/classes/TextChatMessage";
 import ChatInfo from "../../chat/classes/ChatInfo";
 import ChatsList from "../../chat/classes/ChatsList";
+import {messageFromServerData} from "../../chat/classes/ChatUtils";
 
 const WebSocketURL = 'wss://invibes.herokuapp.com/chat/';
 
 export const retrieveChatsList = () => dispatch => {
-    ChatsList.retrieve().then(chats =>{
-        dispatch({
-            type: SET_CHATSLIST,
-            payload: {
-                chats: chats,
-            }
-        })}
+    ChatsList.retrieve().then(chats => {
+            dispatch({
+                type: SET_CHATSLIST,
+                payload: {
+                    chats: chats,
+                }
+            })
+        }
+    ).catch(
+        err => console.log("Error in chatsList retrieve action", err)
     );
 };
 
@@ -47,7 +49,7 @@ export const addChat = (receiver) => dispatch => {
     dispatch({
         type: ADD_CHAT,
         payload: {
-            chat: {receiver: receiver, id: 0},
+            chat: {receiver: receiver, id: -1},
         }
     });
 
@@ -90,9 +92,9 @@ export const getChat = (receiver) => dispatch => {
             JSON.parse(response.data).messages
                 .forEach(message => {
                     if (message.sender.toString() === receiver.toString()) {
-                        new_messages.push(messageFromHTTPData('left', message))
+                        new_messages.push(messageFromServerData('left', message))
                     } else {
-                        new_messages.push(messageFromHTTPData('right', message))
+                        new_messages.push(messageFromServerData('right', message))
                     }
                 });
 
@@ -116,7 +118,7 @@ export const retrieveChat = (chatInfo) => dispatch => {
                 chat: chat,
             }
         })
-    );
+    ).catch(err => console.log("Error in retrieveChat Action.", err));
 };
 
 
@@ -156,7 +158,7 @@ export const openWebSocketForChat = () => dispatch => {
         const messageData = JSON.parse(message.data);
         let new_message = {};
         if (messageData.type === 'message_echo') {
-            new_message = messageFromHTTPData('right', messageData);
+            new_message = messageFromServerData('right', messageData);
             dispatch({
                 type: UPDATE_MESSAGE,
                 payload: {
@@ -165,7 +167,7 @@ export const openWebSocketForChat = () => dispatch => {
             });
 
         } else if (messageData.type === 'new_message') {
-            new_message = messageFromHTTPData('left', messageData);
+            new_message = messageFromServerData('left', messageData);
             dispatch({
                 type: ADD_MESSAGE,
                 payload: {
@@ -194,19 +196,4 @@ export const openWebSocketForChat = () => dispatch => {
             ws: ws
         }
     })
-};
-
-const messageFromHTTPData = (direction, data) => {
-    // Always text message for now
-    // if (data.messageType.toString() === "textMessage") {
-    const receiver = direction === "left" ? data.sender : data.receiver;
-    return new TextChatMessage(
-        data.text,
-        direction,
-        receiver,
-        true,
-        parseISOString(data.datetime),
-        data.created_timestamp,
-        data.id
-    );
 };

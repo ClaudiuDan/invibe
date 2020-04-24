@@ -10,7 +10,6 @@ class HomeScreen extends Component {
 
         this.state = {
             webSocket: null,
-            chatsList: [],
         }
     }
 
@@ -41,7 +40,6 @@ class HomeScreen extends Component {
 
 const mapStateToProps = state => ({
     webSocket: state.chat.webSocket,
-    chatsList: state.chat.chatsList,
 });
 
 export default connect(mapStateToProps, {openWebSocketForChat, retrieveChatsList})(HomeScreen);

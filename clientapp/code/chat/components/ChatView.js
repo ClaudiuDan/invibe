@@ -4,7 +4,7 @@ import {connect} from "react-redux";
 import {addMessage, getChat, retrieveChat} from "../../redux/actions/ChatAction";
 import {chatInputStyles} from "../styles/ChatInputStyles";
 import {InputBar} from "./ChatInputBar";
-import TextChatMessage from "../classes/TextChatMessage";
+import TextChatMessage from "../classes/messagesTypes/TextChatMessage";
 
 class ChatView extends Component {
 
@@ -15,7 +15,6 @@ class ChatView extends Component {
             chatInfo: this.props.chatsList.chatsInfo[this.props.receiverId],
             inputBarText: '',
         };
-        console.log(this.state.chatInfo);
         this.props.retrieveChat(this.state.chatInfo);
     }
 

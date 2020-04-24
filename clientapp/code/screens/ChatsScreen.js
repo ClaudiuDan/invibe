@@ -19,7 +19,6 @@ class ChatsScreen extends Component {
 
     constructor(props) {
         super(props);
-
         this.state = {
             modalVisible: false,
             receiverId: '',
@@ -37,7 +36,8 @@ class ChatsScreen extends Component {
         }
     }
 
-    componentDidUpdate() {
+
+    componentDidUpdate(prevProps, prevState, snapshot) {
         if (this.props.chatsList !== this.state.chatsList) {
             this.setState({
                 chatsList: this.props.chatsList,
@@ -96,26 +96,27 @@ class ChatsScreen extends Component {
         );
     }
 
-     getChatsListComponent(chatsList) {
+    getChatsListComponent(chatsInfo) {
         const chatsEntries = [];
-        let index = 0;
-        for (const receiver in chatsList) {
-            chatsEntries.push((
-                    <TouchableWithoutFeedback
-                        key={index}
-                        style={styles.chatTouchable}
-                        onPress={() => this.props.navigation.navigate('Chat', {receiverId: receiver})}
-                        onLongPress={() => this.openActionSheetDeleteChat(chatsList[receiver])}
-                    >
-                        <View style={styles.chatView}>
-                            <Text style={styles.chatViewText}>
-                                {"Chat with " + receiver}
-                            </Text>
-                        </View>
-                    </TouchableWithoutFeedback>
-            ));
-            index++;
+        const chats = [];
+        for (const receiver in chatsInfo) {
+            chats.push(chatsInfo[receiver]);
         }
+        chats.sort((c1, c2) => c2.ord - c1.ord).forEach((chatInfo, index) => chatsEntries.push((
+            <TouchableWithoutFeedback
+                key={index}
+                style={styles.chatTouchable}
+                onPress={() => this.props.navigation.navigate('Chat', {receiverId: chatInfo.receiver})}
+                onLongPress={() => this.openActionSheetDeleteChat(chatInfo)}
+            >
+                <View style={styles.chatView}>
+                    <Text style={styles.chatViewText}>
+                        {"Chat with " + chatInfo.receiver}
+                    </Text>
+                </View>
+            </TouchableWithoutFeedback>
+        )));
+
         return chatsEntries;
     }
 

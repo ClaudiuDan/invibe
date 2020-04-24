@@ -12,73 +12,86 @@ import ChatsList from "../../chat/classes/ChatsList";
 import ChatInfo from "../../chat/classes/ChatInfo";
 
 function chatReducer(state = {}, action) {
+    const chatsInfo = state.chatsList ? state.chatsList.chatsInfo : null;
+    const chatsList = state.chatsList;
+
     let receiver = null;
     let chat = null;
-    let chatsList = state.chatsList ? state.chatsList.chatsInfo : null;
     let message = null;
+    let newChatsList = null;
 
     switch (action.type) {
+
         case SET_CHATSLIST:
             return {
                 ...state,
-                chatsList: new ChatsList(action.payload.chats)
+                chatsList: new ChatsList(action.payload.chats, true)
             };
 
         case ADD_CHAT:
             chat = action.payload.chat;
 
-            let currMessagesKeys = [];
-            let currMessages = [];
-            if (receiver in chatsList) {
-                currMessagesKeys = chatsList[receiver].messagesKeys;
-                currMessages = chatsList[receiver].messages;
+            if (chat.id === -1) {
+                // Adding a chatInfo which was not validated by the server
+                newChatsList = chat.receiver in chatsInfo ? chatsList :
+                    new ChatsList({
+                        ...chatsInfo,
+                        [chat.receiver]: new ChatInfo(chat.receiver, chat.id, chatsList.maxOrd + 1)
+                    }, true);
+            } else {
+                // Adding a server validated chatInfo
+                newChatsList = chat.receiver in chatsInfo
+                    ?
+                    new ChatsList({
+                        ...chatsInfo,
+                        [chat.receiver]: new ChatInfo(chat.receiver, chat.id, chatsInfo[chat.receiver].ord, chatsInfo[chat.receiver].messagesKeys, chatsInfo[chat.receiver].messages)
+                    }, true)
+                    :
+                    new ChatsList({
+                        ...chatsInfo,
+                        [chat.receiver]: new ChatInfo(chat.receiver, chat.id, chatsList.maxOrd + 1)
+                    }, true);
             }
 
             return {
                 ...state,
-                chatsList: new ChatsList({
-                    ...state.chatsList.chatsInfo,
-                    [chat.receiver.toString()]: new ChatInfo(chat.receiver,
-                        chat.id,
-                        state.chatsList.maxOrd + 1,
-                        currMessagesKeys,
-                        currMessages)
-                })
+                chatsList: newChatsList,
             };
 
         case DELETE_CHAT:
             receiver = action.payload.receiver;
-            if (!(receiver in chatsList)) {
+
+            if (!(receiver in chatsInfo)) {
                 return state;
             }
-            delete chatsList[receiver];
+            delete chatsInfo[receiver];
             return {
                 ...state,
-                chatsList: new ChatsList({...chatsList})
+                chatsList: new ChatsList({...chatsInfo}, true)
             };
 
         case SET_CHAT:
-            receiver = action.payload.receiver.toString();
-            let id = 0;
-            let ord = state.chatsList.maxOrd + 1;
-            if (receiver in chatsList) {
-                id = chatsList[receiver].id;
-                ord = chatsList[receiver].ord;
-            }
+            receiver = action.payload.receiver;
 
-            chatsList[receiver] = new ChatInfo(receiver, id, ord,
-                ChatInfo.getMessageKeysFromMessages(action.payload.chat), action.payload.chat);
+            chatsInfo[receiver] = receiver in chatsInfo
+                ?
+                new ChatInfo(receiver, chatsInfo[receiver].id, chatsInfo[receiver].ord,
+                    ChatInfo.getMessageKeysFromMessages(action.payload.chat), action.payload.chat)
+                :
+                new ChatInfo(receiver, -1, chatsList.maxOrd + 1,
+                    ChatInfo.getMessageKeysFromMessages(action.payload.chat), action.payload.chat);
 
             return {
                 ...state,
-                chatsList: new ChatsList({...chatsList})
+                chatsList: new ChatsList({...chatsInfo})
             };
 
         case RETRY_MESSAGES:
-            for (receiver in chatsList) {
-                chatsList[receiver].messages.forEach(msg => {
+
+            for (receiver in chatsInfo) {
+                chatsInfo[receiver].messages.forEach(msg => {
                     if (!msg.sent) {
-                        sendMessageViaWebSocket(msg, state.webSocket, receiver);
+                        msg.sendMessageViaWebSocket(state.webSocket);
                     }
                 });
             }
@@ -86,31 +99,34 @@ function chatReducer(state = {}, action) {
             return state;
 
         case ADD_MESSAGE:
-            receiver = action.payload.message.receiver.toString();
+
+            receiver = action.payload.message.receiver;
             message = action.payload.message;
 
             if (message.direction === "right") {
-                sendMessageViaWebSocket(action.payload.message, state.webSocket, receiver);
+                message.sendMessageViaWebSocket(state.webSocket);
             }
-            chatsList[receiver] = new ChatInfo(receiver, chatsList[receiver].id, chatsList.maxOrd + 1,
-                [...chatsList[receiver].messagesKeys, message.getUniqueKey()],
-                [...chatsList[receiver].messages, message]);
+
+            chatsInfo[receiver] = new ChatInfo(receiver, chatsInfo[receiver].id, chatsList.maxOrd + 1,
+                [...chatsInfo[receiver].messagesKeys, message.getUniqueKey()],
+                [...chatsInfo[receiver].messages, message]);
 
             return {
                 ...state,
-                chatsList: new ChatsList({...chatsList})
+                chatsList: new ChatsList({...chatsInfo})
             };
 
         case UPDATE_MESSAGE:
             message = action.payload.message;
-            chatsList[message.receiver] = chatsList[message.receiver].updateMessage(message);
+            chatsInfo[message.receiver] = chatsInfo[message.receiver].updateMessage(message);
 
             return {
                 ...state,
-                chatsList: new ChatsList({...chatsList})
+                chatsList: new ChatsList({...chatsInfo})
             };
 
         case ADD_WEBSOCKET_CONNECTION:
+
             return {
                 ...state,
                 webSocket: action.payload.ws,
@@ -120,16 +136,5 @@ function chatReducer(state = {}, action) {
             return state
     }
 }
-
-const sendMessageViaWebSocket = (msg, ws, receiver) => {
-    if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({
-            type: 'message',
-            text: msg.text,
-            receiver: receiver,
-            created_timestamp: msg.createdTimestamp,
-        }));
-    }
-};
 
 export default chatReducer;
