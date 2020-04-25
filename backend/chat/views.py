@@ -29,6 +29,7 @@ class ChatAPIView(APIView):
                     "text": message.text,
                     "datetime": message.server_received_datetime,
                     "is_seen": message.is_seen,
+                    'created_timestamp': message.created_timestamp,
                     "receiver": message.receiver.pk,
                     "sender": message.sender.pk
 

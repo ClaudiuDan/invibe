@@ -45,10 +45,12 @@ class RegisterScreen extends Component {
                 />
                 <TextInput
                     placeholder='Password'
+                    secureTextEntry={true}
                     onChangeText={this.onPasswordChange.bind(this)}
                 />
                 <TextInput
                     placeholder='Confirm Password'
+                    secureTextEntry={true}
                     onChangeText={this.onConfirmedPasswordChange.bind(this)}
                 />
                 <View style={{margin:7}} />

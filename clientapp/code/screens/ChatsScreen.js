@@ -27,7 +27,7 @@ class ChatsScreen extends Component {
     }
 
     componentDidMount() {
-        this.props.getChatsList();
+        setTimeout(() => this.props.getChatsList(), 300);
     }
 
     static getDerivedStateFromProps(nextProps) {
@@ -37,7 +37,7 @@ class ChatsScreen extends Component {
     }
 
 
-    componentDidUpdate(prevProps, prevState, snapshot) {
+    componentDidUpdate(_prevProps, _prevState, _snapshot) {
         if (this.props.chatsList !== this.state.chatsList) {
             this.setState({
                 chatsList: this.props.chatsList,

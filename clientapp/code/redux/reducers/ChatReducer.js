@@ -23,9 +23,21 @@ function chatReducer(state = {}, action) {
     switch (action.type) {
 
         case SET_CHATSLIST:
+            if (!action.payload.chats) {
+                return state;
+            }
+
+            if(!action.payload.isRetrieve) {
+                for (const receiver in action.payload.chats) {
+                    if (!(receiver in chatsInfo) || !chatsInfo[receiver]) {
+                        action.payload.chats[receiver].save();
+                    }
+                }
+            }
+
             return {
                 ...state,
-                chatsList: new ChatsList(action.payload.chats, true)
+                chatsList: new ChatsList(action.payload.chats, !action.payload.isRetrieve)
             };
 
         case ADD_CHAT:
@@ -36,7 +48,7 @@ function chatReducer(state = {}, action) {
                 newChatsList = chat.receiver in chatsInfo ? chatsList :
                     new ChatsList({
                         ...chatsInfo,
-                        [chat.receiver]: new ChatInfo(chat.receiver, chat.id, chatsList.maxOrd + 1)
+                        [chat.receiver]: new ChatInfo(chat.receiver, chat.id, true, chatsList.maxOrd + 1)
                     }, true);
             } else {
                 // Adding a server validated chatInfo
@@ -44,12 +56,12 @@ function chatReducer(state = {}, action) {
                     ?
                     new ChatsList({
                         ...chatsInfo,
-                        [chat.receiver]: new ChatInfo(chat.receiver, chat.id, chatsInfo[chat.receiver].ord, chatsInfo[chat.receiver].messagesKeys, chatsInfo[chat.receiver].messages)
+                        [chat.receiver]: new ChatInfo(chat.receiver, chat.id, true, chatsInfo[chat.receiver].ord, chatsInfo[chat.receiver].messagesKeys, chatsInfo[chat.receiver].messages)
                     }, true)
                     :
                     new ChatsList({
                         ...chatsInfo,
-                        [chat.receiver]: new ChatInfo(chat.receiver, chat.id, chatsList.maxOrd + 1)
+                        [chat.receiver]: new ChatInfo(chat.receiver, chat.id, true, chatsList.maxOrd + 1)
                     }, true);
             }
 
@@ -72,13 +84,12 @@ function chatReducer(state = {}, action) {
 
         case SET_CHAT:
             receiver = action.payload.receiver;
-
             chatsInfo[receiver] = receiver in chatsInfo
                 ?
-                new ChatInfo(receiver, chatsInfo[receiver].id, chatsInfo[receiver].ord,
+                new ChatInfo(receiver, chatsInfo[receiver].id, true, chatsInfo[receiver].ord,
                     ChatInfo.getMessageKeysFromMessages(action.payload.chat), action.payload.chat)
                 :
-                new ChatInfo(receiver, -1, chatsList.maxOrd + 1,
+                new ChatInfo(receiver, -1, true, chatsList.maxOrd + 1,
                     ChatInfo.getMessageKeysFromMessages(action.payload.chat), action.payload.chat);
 
             return {
@@ -107,7 +118,7 @@ function chatReducer(state = {}, action) {
                 message.sendMessageViaWebSocket(state.webSocket);
             }
 
-            chatsInfo[receiver] = new ChatInfo(receiver, chatsInfo[receiver].id, chatsList.maxOrd + 1,
+            chatsInfo[receiver] = new ChatInfo(receiver, chatsInfo[receiver].id, true, chatsList.maxOrd + 1,
                 [...chatsInfo[receiver].messagesKeys, message.getUniqueKey()],
                 [...chatsInfo[receiver].messages, message]);
 

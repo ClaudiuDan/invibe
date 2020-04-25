@@ -15,13 +15,29 @@ class ChatView extends Component {
             chatInfo: this.props.chatsList.chatsInfo[this.props.receiverId],
             inputBarText: '',
         };
-        this.props.retrieveChat(this.state.chatInfo);
     }
 
+    _keyboardDidShow = () => {
+        setTimeout(() => {
+            if (this && this.scrollView) {
+                this.scrollView.scrollToEnd();
+            }
+        });
+    };
+
     componentDidMount() {
-        if (!this.state.chatInfo.messages.length) {
-            this.props.getChat(this.props.receiverId);
-        }
+        Keyboard.addListener('keyboardDidShow', this._keyboardDidShow);
+
+        setTimeout(() => this.props.retrieveChat(this.state.chatInfo));
+
+        setTimeout(() => {
+            console.log("chat length")
+            console.log(this.state.chatInfo.messages.length);
+            if (!this.state.chatInfo.messages.length) {
+                this.props.getChat(this.props.receiverId);
+            }
+        }, 700);
+
         setTimeout(() => this.scrollView.scrollToEnd());
     }
 
@@ -31,7 +47,11 @@ class ChatView extends Component {
         }
     }
 
-    componentDidUpdate() {
+    componentWillUnmount() {
+        Keyboard.removeListener("keyboardDidShow", this._keyboardDidShow);
+    }
+
+    componentDidUpdate(_prevProps, _prevState, _snapshot) {
         if (this.props.chatsList.chatsInfo[this.props.receiverId] !== this.state.chatInfo) {
             this.setState({
                 chatInfo: this.props.chatsList.chatsInfo[this.props.receiverId],
@@ -40,16 +60,16 @@ class ChatView extends Component {
         }
     }
 
-    _sendMessage() {
-        const message = this.state.inputBarText;
+    createTextMessage = () => this.state.inputBarText ?
+        new TextChatMessage(
+            this.state.inputBarText,
+            "right",
+            this.props.receiverId) : null;
 
-        if (message) {
-            this.props.addMessage(
-                new TextChatMessage(
-                    message,
-                    "right",
-                    this.props.receiverId)
-            );
+    sendMessage = (msg) => {
+
+        if (msg) {
+            this.props.addMessage(msg);
 
             this.setState({
                 inputBarText: ''
@@ -57,32 +77,21 @@ class ChatView extends Component {
 
             Keyboard.dismiss()
         }
-    }
+    };
 
-    _onChangeInputBarText(text) {
+    _onChangeInputBarText = (text) => {
         this.setState({
             inputBarText: text
         });
-    }
+    };
 
-    //This event fires way too often.
-    //We need to move the last message up if the input bar expands due to the user's new message exceeding the height of the box.
-    //We really only need to do anything when the height of the InputBar changes, but AutogrowInput can't tell us that.
-    //The real solution here is probably a fork of AutogrowInput that can provide this information.
-    _onInputSizeChange() {
+    _onInputSizeChange = () => {
         setTimeout(() => this.scrollView.scrollToEnd({animated: false}));
-    }
+    };
 
     render() {
 
         const messages = this.state.chatInfo.messages.map((message, index) => message.getComponentToRender(index));
-        // messages.push(<MessageBox key={100}
-        //                           direction={"right"}
-        //                           text={""}
-        //                           datetime={new Date()}
-        //                           sent={true}
-        //                           content={<ImageContent key={1000}/>}
-        // />);
 
         return (
             <View style={chatInputStyles.outer}>
@@ -93,9 +102,11 @@ class ChatView extends Component {
                     style={chatInputStyles.messages}>
                     {messages}
                 </ScrollView>
-                <InputBar onSendPressed={() => this._sendMessage()}
-                          onSizeChange={() => this._onInputSizeChange()}
-                          onChangeText={(text) => this._onChangeInputBarText(text)}
+                <InputBar onSendPressed={this.sendMessage}
+                          onSizeChange={this._onInputSizeChange}
+                          onChangeText={this._onChangeInputBarText}
+                          createTextMessage={this.createTextMessage}
+                          receiverId={this.props.receiverId}
                           text={this.state.inputBarText}/>
             </View>
         );

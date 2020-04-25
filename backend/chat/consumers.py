@@ -87,6 +87,7 @@ class ChatConsumer(WebsocketConsumer):
             'sender': self.scope["user"].pk,
             'receiver': data['receiver'],
             'text': data['text'],
+            'created_timestamp': new_message.created_timestamp,
             'datetime': json.dumps(new_message.server_received_datetime, cls=DjangoJSONEncoder),
             'id': new_message.pk,
         }

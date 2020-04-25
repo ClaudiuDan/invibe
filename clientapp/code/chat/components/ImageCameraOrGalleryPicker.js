@@ -3,6 +3,7 @@ import {Icon} from 'react-native-elements'
 import * as ImagePicker from 'expo-image-picker';
 import {connectActionSheet} from '@expo/react-native-action-sheet'
 import {chatColour, chatSelectedColour} from "../styles/ChatsScreenStyles";
+import ImageChatMessage from "../classes/messagesTypes/ImageChatMessage";
 
 class ImageCameraOrGalleryPicker extends Component {
 
@@ -42,6 +43,7 @@ class ImageCameraOrGalleryPicker extends Component {
             if (!result.cancelled) {
                 console.log(result.uri);
                 this.setState({image: result.uri});
+                this.props.onPress(new ImageChatMessage(result.uri, "right", this.props.receiverId));
             }
         } catch (E) {
             console.log(E);

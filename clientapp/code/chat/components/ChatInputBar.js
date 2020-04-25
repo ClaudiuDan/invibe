@@ -13,17 +13,20 @@ export class InputBar extends Component {
             <View style={chatInputStyles.inputBar}>
                 <TextInput style={chatInputStyles.textBox}
                            multiline={true}
-                           onChangeText={(text) => this.props.onChangeText(text)}
+                           onChangeText={this.props.onChangeText}
                            onContentSizeChange={this.props.onSizeChange}
                            value={this.props.text}/>
-                <ImagePickerView/>
+                <ImagePickerView
+                    onPress={this.props.onSendPressed}
+                    receiverId={this.props.receiverId}
+                />
                 <Icon
                     reverse
                     name='send'
                     type='feather'
                     size={20}
                     color={chatColour}
-                    onPress={this.props.onSendPressed}
+                    onPress={() => this.props.onSendPressed(this.props.createTextMessage())}
                     underlayColor={chatSelectedColour}
                 />
             </View>

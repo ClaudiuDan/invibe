@@ -11,7 +11,7 @@ const initialState = {
             userId: 0,
         },
     chat: {
-        chatsList: null,
+        chatsList: new ChatsList(),
         webSocket: null,
     }
 };

@@ -28,9 +28,10 @@ export const genFrontendId = (length) => {
     return result;
 };
 
-export const saveToLocalStorage = (key, data, errText) =>
+export const saveToLocalStorage = (key, data, errText) => {
+    // console.log("saving...", key, data);
     AsyncStorage.setItem(key, JSON.stringify(data)).catch(err => console.log(errText, err));
-
+};
 
 export const retrieveFromLocalStorage = async (key, errText) => {
     const value = await AsyncStorage.getItem(key)

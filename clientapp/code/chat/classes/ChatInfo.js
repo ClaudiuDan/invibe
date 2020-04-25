@@ -2,13 +2,15 @@ import {retrieveFromLocalStorage, saveToLocalStorage} from "../../Utils/Utils";
 import {retrieveMessage} from "./ChatUtils";
 
 export default class ChatInfo {
-    constructor(receiver, id, ord = 0, messagesKeys = [], messages = []) {
+    constructor(receiver, id, saveContent = true, ord = 0, messagesKeys = [], messages = []) {
         this._receiver = receiver.toString();
         this._id = id;
         this._messagesKeys = messagesKeys;
         this._messages = messages;
         this._ord = ord;
-        this.save();
+        if (saveContent) {
+            this.save();
+        }
     }
 
     static getMessageKeysFromMessages(messages) {
@@ -16,17 +18,21 @@ export default class ChatInfo {
     }
 
     static instanceFromDic(dic) {
-        return new ChatInfo(dic.receiver, dic.id, dic.messagesKeys);
+        return new ChatInfo(dic.receiver, dic.id, false, dic.ord, dic.messagesKeys);
     }
 
     updateMessage(newMessage) {
-        const index = this._messages.findIndex(msg => msg.getUniqueKey() === newMessage.getUniqueKey());
+        const index = this._messages.findIndex(msg => {
+            return msg.getUniqueKey() === newMessage.getUniqueKey()
+        });
         if (index === -1) {
             return this;
         }
+
         return new ChatInfo(
             this.receiver,
             this.id,
+            false,
             this.ord,
             this.messagesKeys,
             [...this.messages.slice(0, index), newMessage, ...this.messages.slice(index + 1)]
@@ -35,8 +41,8 @@ export default class ChatInfo {
 
     async retrieveMessages() {
         const messages = [];
-        for (const key in this.messagesKeys) {
-            const message = await retrieveMessage(key);
+        for (const msgKey of this.messagesKeys) {
+            const message = await retrieveMessage(msgKey);
             messages.push(message)
         }
         return messages;

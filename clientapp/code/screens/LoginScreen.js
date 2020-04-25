@@ -36,7 +36,7 @@ class LoginScreen extends Component {
 
   get = () => {
     this.props.signIn(this.state.email, this.state.password);
-  }
+  };
 
   render() {
     return (
@@ -47,6 +47,7 @@ class LoginScreen extends Component {
         />
         <TextInput
           placeholder='Password'
+          secureTextEntry={true}
           onChangeText={this.onPasswordChange.bind(this)}
         />
         <View style={{margin:7}} />

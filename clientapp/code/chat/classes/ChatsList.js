@@ -45,7 +45,7 @@ export default class ChatsList {
             return {};
         }
 
-        const res = {}
+        const res = {};
 
         for (const receiver in value) {
             if (value[receiver]) {

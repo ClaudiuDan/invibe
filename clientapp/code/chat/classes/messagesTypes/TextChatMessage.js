@@ -7,10 +7,14 @@ export default class TextChatMessage extends ChatMessage {
     constructor(text, ...args) {
         super(...args);
         this._text = text;
+
+        if (args[2]) {  //saveContent
+            this.save();
+        }
     }
 
     static instanceFromDictionary(dic) {
-        return new TextChatMessage(dic.text, dic.direction, dic.receiver, dic.sent, dic.datetime, dic.createdTimestamp, dic.id);
+        return new TextChatMessage(dic.text, dic.direction, dic.receiver, false, dic.sent, dic.datetime, dic.createdTimestamp, dic.id);
     }
 
     getComponentToRender(key) {
@@ -39,7 +43,7 @@ export default class TextChatMessage extends ChatMessage {
     getDictionary() {
         return {
             ...super.getDictionary(),
-            text: this._text,
+            text: this.text,
             type: messageType.TEXT
         };
     }

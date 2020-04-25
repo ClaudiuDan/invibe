@@ -1,24 +1,24 @@
 import {saveToLocalStorage} from "../../../Utils/Utils";
 
-//INFO: When creating a new type of message, you have to add a new case in the ChatUtils functions
+//INFO: When creating a new type of message, you have to add a new case in the ChatUtils functions and an enum field in ChatMessageTypes.
 export default class ChatMessage {
     constructor(direction,
                 receiver,
+                saveContent = true,
                 sent = false,
                 datetime = new Date(),
-                createdTimestamp = Math.floor(Date.now() / 100),
+                createdTimestamp = Date.now(),
                 id = Math.floor(Math.random() * 1e9)
     ) {
         if (new.target === ChatMessage) {
             throw new TypeError("Cannot construct Abstract instances of ChatMessage directly");
         }
         this._direction = direction;
-        this._datetime = datetime;
+        this._datetime = new Date(datetime);
         this._createdTimestamp = createdTimestamp;
         this._sent = sent;
         this._id = id;
         this._receiver = receiver.toString();
-        this.save();
     }
 
     isEqual(chatMessage) {
@@ -27,14 +27,14 @@ export default class ChatMessage {
         }
 
 
-        return (this._direction === "right" && this._createdTimestamp === chatMessage.createdTimestamp) || // Own message, not always has a db generated id
-            (this._direction === "left" && this._id === chatMessage.id);
+        return (this.direction === "right" && this.createdTimestamp === chatMessage.createdTimestamp) || // Own message, not always has a db generated id
+            (this.direction === "left" && this.id === chatMessage.id);
     }
 
     getUniqueKey() {
         return this.direction === "right" ?
-            "r-" + this._createdTimestamp.toString() :
-            "l-" + this._id.toString();
+            "r-" + this.createdTimestamp.toString() :
+            "l-" + this.id.toString();
     }
 
     save() {
@@ -47,12 +47,12 @@ export default class ChatMessage {
 
     getDictionary() {
         return {
-            direction: this._direction,
-            receiver: this._receiver,
-            datetime: this._datetime,
-            createdTimestamp: this._createdTimestamp,
-            sent: this._sent,
-            id: this._id,
+            direction: this.direction,
+            receiver: this.receiver,
+            datetime: this.datetime,
+            createdTimestamp: this.createdTimestamp,
+            sent: this.sent,
+            id: this.id,
         }
     }
 

@@ -12,6 +12,7 @@ export const retrieveChatsList = () => dispatch => {
             dispatch({
                 type: SET_CHATSLIST,
                 payload: {
+                    isRetrieve: true,
                     chats: chats,
                 }
             })
@@ -29,12 +30,13 @@ export const getChatsList = () => dispatch => {
             const chats = {};
             parsedChats
                 .forEach((chat, index) => {
-                    chats[chat.receiver] = new ChatInfo(chat.receiver, chat.id, parsedChats.length - index);
+                    chats[chat.receiver] = new ChatInfo(chat.receiver, chat.id, false, parsedChats.length - index);
                 });
 
             dispatch({
                 type: SET_CHATSLIST,
                 payload: {
+                    isRetrieve: false,
                     chats: chats,
                 }
             })
@@ -85,6 +87,7 @@ export const deleteChat = (chat) => dispatch => {
 // TODO: Consider storing only the last n messages in the storage(Consider doing the same for the backend call)
 // TODO: Consider adding to the current list of chats(or updating it) instead of replacing it
 export const getChat = (receiver) => dispatch => {
+    console.log("get chat");
     Axios
         .get(`/chat/get_chat/`, {params: {receiver: receiver}})
         .then(response => {
@@ -110,14 +113,15 @@ export const getChat = (receiver) => dispatch => {
 };
 
 export const retrieveChat = (chatInfo) => dispatch => {
-    chatInfo.retrieveMessages().then(chat =>
+    console.log("retrieve chat");
+    chatInfo.retrieveMessages().then(chat =>{
         dispatch({
             type: SET_CHAT,
             payload: {
                 receiver: chatInfo.receiver,
                 chat: chat,
             }
-        })
+        })}
     ).catch(err => console.log("Error in retrieveChat Action.", err));
 };
 
