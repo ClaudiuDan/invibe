@@ -91,21 +91,23 @@ export const getChat = (receiver) => dispatch => {
     Axios
         .get(`/chat/get_chat/`, {params: {receiver: receiver}})
         .then(response => {
-            const new_messages = [];
+            const newMessage = [];
             JSON.parse(response.data).messages
                 .forEach(message => {
                     if (message.sender.toString() === receiver.toString()) {
-                        new_messages.push(messageFromServerData('left', message))
+                        newMessage.push(messageFromServerData('left', message))
                     } else {
-                        new_messages.push(messageFromServerData('right', message))
+                        newMessage.push(messageFromServerData('right', message))
                     }
                 });
+
 
             dispatch({
                 type: SET_CHAT,
                 payload: {
                     receiver: receiver,
-                    chat: new_messages,
+                    chat: newMessage.sort((msg1, msg2) => msg1.datetime - msg2.datetime),
+                    isRetrieve: false,
                 }
             })
         })
@@ -113,13 +115,13 @@ export const getChat = (receiver) => dispatch => {
 };
 
 export const retrieveChat = (chatInfo) => dispatch => {
-    console.log("retrieve chat");
-    chatInfo.retrieveMessages().then(chat =>{
+    chatInfo.retrieveMessages().then(chat => {
         dispatch({
             type: SET_CHAT,
             payload: {
                 receiver: chatInfo.receiver,
                 chat: chat,
+                isRetrieve: true,
             }
         })}
     ).catch(err => console.log("Error in retrieveChat Action.", err));

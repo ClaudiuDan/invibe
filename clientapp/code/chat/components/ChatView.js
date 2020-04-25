@@ -28,15 +28,15 @@ class ChatView extends Component {
     componentDidMount() {
         Keyboard.addListener('keyboardDidShow', this._keyboardDidShow);
 
-        setTimeout(() => this.props.retrieveChat(this.state.chatInfo));
+        setTimeout(() => {
+            if (!this.state.chatInfo.messages.length) {
+                this.props.retrieveChat(this.state.chatInfo)
+            }
+        });
 
         setTimeout(() => {
-            console.log("chat length")
-            console.log(this.state.chatInfo.messages.length);
-            if (!this.state.chatInfo.messages.length) {
-                this.props.getChat(this.props.receiverId);
-            }
-        }, 700);
+            this.props.getChat(this.props.receiverId);
+        }, 200);
 
         setTimeout(() => this.scrollView.scrollToEnd());
     }

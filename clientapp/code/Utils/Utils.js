@@ -41,3 +41,28 @@ export const retrieveFromLocalStorage = async (key, errText) => {
     }
     return null;
 };
+
+
+// isLessThanFun return true if a[i] < b[j]
+export const mergeSortedArrays = (a, b, isLessThanFun) => {
+    const res = [];
+    let i = 0, j = 0;
+    while (i < a.length && j < b.length) {
+        if (isLessThanFun(a[i], b[j])) {
+            res.push(a[i]);
+            i++;
+        }else {
+            res.push(b[j]);
+            j++;
+        }
+    }
+    while (i < a.length) {
+        res.push(a[i]);
+        i++;
+    }
+    while (j < b.length) {
+        res.push(b[j]);
+        j++;
+    }
+    return res;
+}

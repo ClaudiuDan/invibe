@@ -19,8 +19,8 @@ export default class ChatMessage {
         this._sent = sent;
         this._id = id;
         this._receiver = receiver.toString();
+        this._saveContent = saveContent;
     }
-
     isEqual(chatMessage) {
         if (!chatMessage) {
             return false;
@@ -88,5 +88,9 @@ export default class ChatMessage {
 
     get id() {
         return this._id;
+    }
+
+    get saveContent() {
+        return this._saveContent;
     }
 }

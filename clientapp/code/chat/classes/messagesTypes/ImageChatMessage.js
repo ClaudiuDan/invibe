@@ -8,7 +8,7 @@ export default class ImageChatMessage extends ChatMessage {
         super(...args);
         this._url = url;
 
-        if (args[2]) {  //saveContent
+        if (this.saveContent) {
             this.save();
         }
     }

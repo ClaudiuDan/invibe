@@ -16,38 +16,34 @@ class ImageCameraOrGalleryPicker extends Component {
     }
 
     launchCamera = async () => {
-        try {
-            let result = await ImagePicker.launchCameraAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.All,
-                quality: 0.5,
-                base64: true,
+        ImagePicker.launchCameraAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.All,
+            quality: 0.5,
+            base64: true,
 
-            });
-            if (!result.cancelled) {
-                this.setState({image: result.uri});
-            }
-        } catch (E) {
-            console.log(E);
-        }
-    };
-
-    launchGallery = async () => {
-        try {
-            let result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.All,
-                quality: 0.5,
-                base64: true,
-                allowsMultipleSelection: true,
-
-            });
+        }).then(result => {
             if (!result.cancelled) {
                 console.log(result.uri);
                 this.setState({image: result.uri});
                 this.props.onPress(new ImageChatMessage(result.uri, "right", this.props.receiverId));
             }
-        } catch (E) {
-            console.log(E);
-        }
+        }).catch(err => console.log("Launch camera error in ImagePicker.", err));
+    };
+
+    launchGallery = async () => {
+        ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.All,
+            quality: 0.5,
+            base64: true,
+            allowsMultipleSelection: true,
+
+        }).then(result => {
+            if (!result.cancelled) {
+                console.log(result.uri);
+                this.setState({image: result.uri});
+                this.props.onPress(new ImageChatMessage(result.uri, "right", this.props.receiverId));
+            }
+        }).catch(err => console.log("Launch gallery error in ImagePicker.", err))
     };
 
     openActionSheetImagePicker = () => {

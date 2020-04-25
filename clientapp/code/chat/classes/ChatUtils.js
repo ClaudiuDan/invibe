@@ -28,7 +28,6 @@ export function messageFromServerData(direction, data) {
     // Always text message for now
     // if (data.message_type.toString() === "textMessage") {
     const receiver = direction === "left" ? data.sender : data.receiver;
-    console.log(data.created_timestamp)
     return new TextChatMessage(
         data.text,
         direction,

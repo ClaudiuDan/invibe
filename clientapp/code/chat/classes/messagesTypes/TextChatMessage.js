@@ -8,7 +8,7 @@ export default class TextChatMessage extends ChatMessage {
         super(...args);
         this._text = text;
 
-        if (args[2]) {  //saveContent
+        if (this.saveContent) {
             this.save();
         }
     }

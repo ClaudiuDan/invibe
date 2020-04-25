@@ -10,6 +10,7 @@ import {
 } from "../actions/Types";
 import ChatsList from "../../chat/classes/ChatsList";
 import ChatInfo from "../../chat/classes/ChatInfo";
+import {mergeSortedArrays} from "../../Utils/Utils";
 
 function chatReducer(state = {}, action) {
     const chatsInfo = state.chatsList ? state.chatsList.chatsInfo : null;
@@ -27,7 +28,7 @@ function chatReducer(state = {}, action) {
                 return state;
             }
 
-            if(!action.payload.isRetrieve) {
+            if (!action.payload.isRetrieve) {
                 for (const receiver in action.payload.chats) {
                     if (!(receiver in chatsInfo) || !chatsInfo[receiver]) {
                         action.payload.chats[receiver].save();
@@ -42,7 +43,6 @@ function chatReducer(state = {}, action) {
 
         case ADD_CHAT:
             chat = action.payload.chat;
-
             if (chat.id === -1) {
                 // Adding a chatInfo which was not validated by the server
                 newChatsList = chat.receiver in chatsInfo ? chatsList :
@@ -70,6 +70,7 @@ function chatReducer(state = {}, action) {
                 chatsList: newChatsList,
             };
 
+            //TODO: delete from local memory
         case DELETE_CHAT:
             receiver = action.payload.receiver;
 
@@ -84,13 +85,27 @@ function chatReducer(state = {}, action) {
 
         case SET_CHAT:
             receiver = action.payload.receiver;
+            chat = action.payload.chat;
+
+            // Keep messages which have not been sent
+            if (receiver in chatsInfo) {
+                const chatMessagesSet = new Set(chat.map(msg => msg.getUniqueKey()));
+                console.log( chatMessagesSet)
+                console.log(new Set(chatsInfo[receiver].messages.filter(msg => !(msg.sent))))
+                console.log(chatsInfo[receiver].messages.filter(msg => !(msg.sent || chatMessagesSet.has(msg.getUniqueKey()))));
+                chat = mergeSortedArrays(
+                    chatsInfo[receiver].messages.filter(msg => !(msg.sent || chatMessagesSet.has(msg.getUniqueKey()))),
+                    chat,
+                    (msg1, msg2) => msg1.datetime < msg2.datetime);
+            }
+
             chatsInfo[receiver] = receiver in chatsInfo
                 ?
-                new ChatInfo(receiver, chatsInfo[receiver].id, true, chatsInfo[receiver].ord,
-                    ChatInfo.getMessageKeysFromMessages(action.payload.chat), action.payload.chat)
+                new ChatInfo(receiver, chatsInfo[receiver].id, !action.payload.isRetrieve, chatsInfo[receiver].ord,
+                    ChatInfo.getMessageKeysFromMessages(chat), chat)
                 :
-                new ChatInfo(receiver, -1, true, chatsList.maxOrd + 1,
-                    ChatInfo.getMessageKeysFromMessages(action.payload.chat), action.payload.chat);
+                new ChatInfo(receiver, -1, !action.payload.isRetrieve, chatsList.maxOrd + 1,
+                    ChatInfo.getMessageKeysFromMessages(chat), chat);
 
             return {
                 ...state,
