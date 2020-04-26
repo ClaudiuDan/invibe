@@ -79,3 +79,15 @@ export const daysBetween = (date1, date2) => {
     return Math.round(differenceMs / ONE_DAY);
 
 };
+
+//Emoji utils
+const ranges = [
+    '\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff]',
+    ' ', // Also allow spaces
+].join('|');
+
+const removeEmoji = str => str.replace(new RegExp(ranges, 'g'), '');
+
+export const isOnlyEmojis = str => !removeEmoji(str).length;
+
+export const unicodeProofStringLength = str => [...str].length;

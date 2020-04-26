@@ -4,6 +4,7 @@ import {Image, Text, TouchableOpacity, View} from "react-native";
 import {chatInputStyles} from "../styles/ChatInputStyles";
 import {formatAMPM} from "../../Utils/Utils";
 import Lightbox from "react-native-lightbox";
+import {isOnlyEmojis, unicodeProofStringLength} from "../../Utils/Utils";
 
 export class MessageBox extends Component {
     render() {
@@ -40,12 +41,16 @@ export class MessageBox extends Component {
 }
 
 export class TextContent extends Component {
+
     render() {
         const bubbleTextStyle = this.props.direction === "left" ?
             chatInputStyles.messageBubbleTextLeft :
             chatInputStyles.messageBubbleTextRight;
 
-        return <Text style={bubbleTextStyle}> {this.props.text} </Text>;
+        const text = this.props.text;
+
+        const fontSize = (isOnlyEmojis(text) && (unicodeProofStringLength(text) <= 3)) ? 27 : 15;
+        return <Text style={[bubbleTextStyle, {fontSize: fontSize}]}> {text} </Text>;
     }
 }
 
