@@ -4,17 +4,19 @@ import {ImageContent, MessageBox} from "../../components/MessageBox";
 import React from "react";
 
 export default class ImageChatMessage extends ChatMessage {
-    constructor(url, ...args) {
+    constructor(imageExtension, base64Content, ...args) {
         super(...args);
-        this._url = url;
 
         if (this.saveContent) {
             this.save();
         }
+        this._imageExtension = imageExtension;
+        this._base64Content = base64Content;
     }
 
     static instanceFromDictionary(dic) {
-        return new ImageChatMessage(dic.url, dic.direction, dic.receiver, false, dic.sent, dic.datetime, dic.createdTimestamp, dic.id);
+        return new ImageChatMessage(dic.imageExtension, dic.base64Content, dic.direction, dic.receiver,
+            false, dic.sent, dic.datetime, dic.createdTimestamp, dic.id);
     }
 
     getComponentToRender(key) {
@@ -24,7 +26,8 @@ export default class ImageChatMessage extends ChatMessage {
                         text={this.text}
                         datetime={this.datetime}
                         sent={this.sent}
-                        content={<ImageContent key={key} url={this.url}/>}
+                        content={<ImageContent key={key}
+                                               url={`data:image/${this.imageExtension};base64,${this.base64Content}`}/>}
             />
         );
     }
@@ -40,16 +43,21 @@ export default class ImageChatMessage extends ChatMessage {
         // }
     }
 
+    //TODO: consider isolating the base64content under another key and lazy load the image(i.e. load message body and retrieve image content later
     getDictionary() {
         return {
             ...super.getDictionary(),
-            url: this._url,
+            imageExtension: this._imageExtension,
+            base64Content: this._base64Content,
             type: messageType.IMAGE
         };
     }
 
-    get url() {
-        return this._url;
+    get imageExtension() {
+        return this._imageExtension;
     }
 
+    get base64Content() {
+        return this._base64Content;
+    }
 }

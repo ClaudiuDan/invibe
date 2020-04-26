@@ -9,11 +9,9 @@ class ImageCameraOrGalleryPicker extends Component {
 
     constructor(props) {
         super(props);
-
-        this.state = {
-            image: null
-        }
     }
+
+    getExtensionFromFileName = (fileName) => fileName.split('.').pop();
 
     launchCamera = async () => {
         ImagePicker.launchCameraAsync({
@@ -23,9 +21,8 @@ class ImageCameraOrGalleryPicker extends Component {
 
         }).then(result => {
             if (!result.cancelled) {
-                console.log(result.uri);
-                this.setState({image: result.uri});
-                this.props.onPress(new ImageChatMessage(result.uri, "right", this.props.receiverId));
+                this.props.onPress(new ImageChatMessage(this.getExtensionFromFileName(result.uri), result.base64,
+                    "right", this.props.receiverId));
             }
         }).catch(err => console.log("Launch camera error in ImagePicker.", err));
     };
@@ -39,9 +36,8 @@ class ImageCameraOrGalleryPicker extends Component {
 
         }).then(result => {
             if (!result.cancelled) {
-                console.log(result.uri);
-                this.setState({image: result.uri});
-                this.props.onPress(new ImageChatMessage(result.uri, "right", this.props.receiverId));
+                this.props.onPress(new ImageChatMessage(this.getExtensionFromFileName(result.uri), result.base64,
+                    "right", this.props.receiverId));
             }
         }).catch(err => console.log("Launch gallery error in ImagePicker.", err))
     };

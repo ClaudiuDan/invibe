@@ -90,9 +90,6 @@ function chatReducer(state = {}, action) {
             // Keep messages which have not been sent
             if (receiver in chatsInfo) {
                 const chatMessagesSet = new Set(chat.map(msg => msg.getUniqueKey()));
-                console.log( chatMessagesSet)
-                console.log(new Set(chatsInfo[receiver].messages.filter(msg => !(msg.sent))))
-                console.log(chatsInfo[receiver].messages.filter(msg => !(msg.sent || chatMessagesSet.has(msg.getUniqueKey()))));
                 chat = mergeSortedArrays(
                     chatsInfo[receiver].messages.filter(msg => !(msg.sent || chatMessagesSet.has(msg.getUniqueKey()))),
                     chat,
