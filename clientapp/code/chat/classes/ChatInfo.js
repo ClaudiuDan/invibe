@@ -1,5 +1,5 @@
 import {retrieveFromLocalStorage, saveToLocalStorage} from "../../Utils/Utils";
-import {retrieveMessage} from "./ChatUtils";
+import {retrieveMessage} from "../../Utils/ChatUtils";
 
 export default class ChatInfo {
     constructor(receiver, id, saveContent = true, ord = 0, messagesKeys = [], messages = []) {

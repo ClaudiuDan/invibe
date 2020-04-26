@@ -1,5 +1,5 @@
 import ChatMessage from "./ChatMessage";
-import {messageType} from "./ChatMessageTypes";
+import {messageType, messageTypesForServer} from "./ChatMessageTypes";
 import {MessageBox, TextContent} from "../../components/MessageBox";
 import React from "react";
 
@@ -32,7 +32,8 @@ export default class TextChatMessage extends ChatMessage {
     sendMessageViaWebSocket(ws) {
         if (ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({
-                type: 'message',
+                type: 'message',  // Specific for the websocket connection with the server
+                message_type: messageTypesForServer.TEXT_MESSAGE,
                 text: this.text,
                 receiver: this.receiver,
                 created_timestamp: this.createdTimestamp,

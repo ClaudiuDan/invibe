@@ -10,7 +10,46 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
 from inv_user.forms import User
-from .models import Message, Chat
+from .models import Message, Chat, MessageTypes, TextMessage
+
+
+def get_specific_message_data_from_message(message):
+    message_type = MessageTypes(message.message_type)
+
+    if message_type == MessageTypes.TEXT_MESSAGE:
+        return TextMessage.objects.get(pk=message)
+    elif message_type == MessageTypes.IMAGE_MESSAGE:
+        print("Server does not support image messages yet.")
+        raise ValueError('message_type not supported')
+    else:
+        raise ValueError('message_type not supported')
+
+
+def get_message_dictionary_from_message(message):
+    message_dic = {
+        "id": message.pk,
+        "datetime": message.server_received_datetime,
+        "is_seen": message.is_seen,
+        'created_timestamp': message.created_timestamp,
+        "receiver": message.receiver.pk,
+        "sender": message.sender.pk,
+        'message_type': message.message_type,
+    }
+
+    specific_message_data = get_specific_message_data_from_message(message)
+    message_type = MessageTypes(message.message_type)
+
+    if message_type == MessageTypes.TEXT_MESSAGE:
+        message_dic['text'] = specific_message_data.text
+
+    elif message_type == MessageTypes.IMAGE_MESSAGE:
+        print("Server does not support image messages yet.")
+        raise ValueError('message_type not supported')
+
+    else:
+        raise ValueError('message_type not supported')
+
+    return message_dic
 
 
 class ChatAPIView(APIView):
@@ -19,22 +58,14 @@ class ChatAPIView(APIView):
     def get(self, request):
         u1 = self.request.query_params.get('receiver')
         u2 = request.user.pk
+
         query = Message.objects.filter(Q(sender=u1, receiver=u2) | Q(sender=u2, receiver=u1)).order_by(
             'server_received_datetime')
+
         messages = []
         for message in query:
-            messages.append(
-                {
-                    "id": message.pk,
-                    "text": message.text,
-                    "datetime": message.server_received_datetime,
-                    "is_seen": message.is_seen,
-                    'created_timestamp': message.created_timestamp,
-                    "receiver": message.receiver.pk,
-                    "sender": message.sender.pk
+            messages.append(get_message_dictionary_from_message(message))
 
-                }
-            )
         return Response(json.dumps({"messages": messages}, cls=DjangoJSONEncoder), status=status.HTTP_200_OK)
 
 

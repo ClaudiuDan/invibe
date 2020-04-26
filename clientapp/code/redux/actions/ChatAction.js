@@ -3,7 +3,7 @@ import {ADD_CHAT, ADD_MESSAGE, SET_CHAT, SET_CHATSLIST, UPDATE_MESSAGE} from "..
 import {ADD_WEBSOCKET_CONNECTION, DELETE_CHAT, RETRY_MESSAGES} from "./Types";
 import ChatInfo from "../../chat/classes/ChatInfo";
 import ChatsList from "../../chat/classes/ChatsList";
-import {messageFromServerData} from "../../chat/classes/ChatUtils";
+import {messageFromServerData} from "../../Utils/ChatUtils";
 
 const WebSocketURL = 'wss://invibes.herokuapp.com/chat/';
 
