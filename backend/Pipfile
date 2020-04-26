@@ -20,6 +20,7 @@ daphne = "==2.4.1"
 django-rest-auth = "==0.9.5"
 django-allauth = "==0.38"
 django-unixdatetimefield = "==1.2"
+pillow = "==7.1.2"
 
 [requires]
 python_version = "3.7.5"

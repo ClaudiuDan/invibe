@@ -12,7 +12,7 @@ from inv_user.models import User
 from rest_framework.authtoken.models import Token
 
 from .views import get_message_dictionary_from_message
-from .models import Message, Chat, TextMessage, MessageTypes
+from .models import Message, Chat, TextMessage, MessageTypes, ImageMessage, decode_base64_to_image_field
 
 
 class ChatConsumer(WebsocketConsumer):
@@ -92,11 +92,21 @@ class ChatConsumer(WebsocketConsumer):
 
         # Save type specific message data
         if message_type == MessageTypes.TEXT_MESSAGE:
+
             specific_new_message = TextMessage.objects.create(messageData=new_message, text=data['text'])
             response_dic['text'] = data['text']
+
         elif message_type == MessageTypes.IMAGE_MESSAGE:
-            print("Server does not support image messages yet.")
-            raise ValueError('message_type not supported')
+
+            specific_new_message = ImageMessage.objects.create(
+                messageData=new_message,
+                image=decode_base64_to_image_field(data['base64_content'], data['image_extension'], new_message.pk),
+                image_extension=data['image_extension']
+            )
+
+            response_dic['base64_content'] = data['base64_content']
+            response_dic['image_extension'] = data['image_extension']
+
         else:
             raise ValueError('message_type not supported')
 

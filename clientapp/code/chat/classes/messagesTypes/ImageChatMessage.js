@@ -1,5 +1,5 @@
 import ChatMessage from "./ChatMessage";
-import {messageType} from "./ChatMessageTypes";
+import {messageType, messageTypesForServer} from "./ChatMessageTypes";
 import {ImageContent, MessageBox} from "../../components/MessageBox";
 import React from "react";
 
@@ -33,14 +33,16 @@ export default class ImageChatMessage extends ChatMessage {
     }
 
     sendMessageViaWebSocket(ws) {
-        // if (ws.readyState === WebSocket.OPEN) {
-        //     ws.send(JSON.stringify({
-        //         type: 'message',
-        //         text: this.text,
-        //         receiver: this.receiver,
-        //         created_timestamp: this.createdTimestamp,
-        //     }));
-        // }
+        if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+                type: 'message',  // Specific for the websocket connection with the server
+                message_type: messageTypesForServer.IMAGE_MESSAGE,
+                receiver: this.receiver,
+                created_timestamp: this.createdTimestamp,
+                image_extension: this.imageExtension,
+                base64_content: this.base64Content,
+            }));
+        }
     }
 
     //TODO: consider isolating the base64content under another key and lazy load the image(i.e. load message body and retrieve image content later

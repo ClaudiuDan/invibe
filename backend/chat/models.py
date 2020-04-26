@@ -3,6 +3,17 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from inv_user.models import User
 from django.utils import timezone
+import base64
+from django.core.files.base import ContentFile
+
+
+def decode_base64_to_image_field(base64_content, image_extension, image_id):
+    image_name = "chat-image-message-{}.{}".format(image_id, image_extension)
+    return ContentFile(base64.b64decode(base64_content), name=image_name)
+
+
+def encode_image_field_to_base64(image):
+    return base64.b64encode(image.read()).decode("utf-8")
 
 
 class MessageTypes(Enum):
@@ -46,6 +57,19 @@ class TextMessage(models.Model):
 
     class Meta:
         db_table = 'chat_text_messages'
+
+
+class ImageMessage(models.Model):
+    messageData = models.OneToOneField(
+        Message,
+        on_delete=models.CASCADE,
+        primary_key=True,
+    )
+    image = models.ImageField(_('image'), upload_to='chat/image_messages/', null=False)
+    image_extension = models.CharField(max_length=10, null=False, blank=False)
+
+    class Meta:
+        db_table = 'chat_image_messages'
 
 
 class Chat(models.Model):

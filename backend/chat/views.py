@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
 from inv_user.forms import User
-from .models import Message, Chat, MessageTypes, TextMessage
+from .models import Message, Chat, MessageTypes, TextMessage, ImageMessage, encode_image_field_to_base64
 
 
 def get_specific_message_data_from_message(message):
@@ -19,8 +19,7 @@ def get_specific_message_data_from_message(message):
     if message_type == MessageTypes.TEXT_MESSAGE:
         return TextMessage.objects.get(pk=message)
     elif message_type == MessageTypes.IMAGE_MESSAGE:
-        print("Server does not support image messages yet.")
-        raise ValueError('message_type not supported')
+        return ImageMessage.objects.get(pk=message)
     else:
         raise ValueError('message_type not supported')
 
@@ -43,8 +42,8 @@ def get_message_dictionary_from_message(message):
         message_dic['text'] = specific_message_data.text
 
     elif message_type == MessageTypes.IMAGE_MESSAGE:
-        print("Server does not support image messages yet.")
-        raise ValueError('message_type not supported')
+        message_dic['base64_content'] = encode_image_field_to_base64(specific_message_data.image)
+        message_dic['image_extension'] = specific_message_data.image_extension
 
     else:
         raise ValueError('message_type not supported')
