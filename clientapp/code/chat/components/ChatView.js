@@ -1,10 +1,11 @@
 import React, {Component} from 'react';
-import {Keyboard, ScrollView, View,} from 'react-native';
+import {Dimensions, Keyboard, ScrollView, Text, View,} from 'react-native';
 import {connect} from "react-redux";
 import {addMessage, getChat, retrieveChat} from "../../redux/actions/ChatAction";
 import {chatInputStyles} from "../styles/ChatInputStyles";
 import {InputBar} from "./ChatInputBar";
 import TextChatMessage from "../classes/messagesTypes/TextChatMessage";
+import {daysBetween} from "../../Utils/Utils";
 
 class ChatView extends Component {
 
@@ -14,6 +15,7 @@ class ChatView extends Component {
         this.state = {
             chatInfo: this.props.chatsList.chatsInfo[this.props.receiverId],
             inputBarText: '',
+            bottomReached: true,
         };
     }
 
@@ -51,12 +53,32 @@ class ChatView extends Component {
         Keyboard.removeListener("keyboardDidShow", this._keyboardDidShow);
     }
 
+    checkIfBottomReached = (e) => {
+        const windowHeight = Dimensions.get('window').height,
+            height = e.nativeEvent.contentSize.height,
+            offset = e.nativeEvent.contentOffset.y;
+        if (windowHeight + offset >= height && !this.state.bottomReached) {
+            this.setState({
+                bottomReached: true,
+            });
+        }
+        if (this.state.bottomReached) {
+            this.setState({
+                bottomReached: false,
+            });
+        }
+    };
+
     componentDidUpdate(_prevProps, _prevState, _snapshot) {
         if (this.props.chatsList.chatsInfo[this.props.receiverId] !== this.state.chatInfo) {
             this.setState({
                 chatInfo: this.props.chatsList.chatsInfo[this.props.receiverId],
             });
-            setTimeout(() => this.scrollView.scrollToEnd(), 20);
+            setTimeout(() => {
+                if (this.state.bottomReached) {
+                    this.scrollView.scrollToEnd()
+                }
+            }, 20);
         }
     }
 
@@ -89,9 +111,29 @@ class ChatView extends Component {
         setTimeout(() => this.scrollView.scrollToEnd({animated: false}));
     };
 
-    render() {
+    getChatDateComponent = (date, index) => {
+        return (
+            <Text style={{fontStyle: "italic", color: "#5b5b5b", textAlign: "center", paddingTop: 7, paddingBottom: 7}}
+                  key={index}>
+                {"- " + date.toDateString() + " -"}
+            </Text>);
+    };
 
-        const messages = this.state.chatInfo.messages.map((message, index) => message.getComponentToRender(index));
+    render() {
+        const messages = this.state.chatInfo.messages;
+        let currDateTime = messages.length > 0 ? messages[0].datetime : new Date();
+        let index = 0;
+
+        const scrollViewContent = messages.reduce((contentSoFar, msg) => {
+            if (daysBetween(msg.datetime, currDateTime) >= 1) {
+                currDateTime = msg.datetime;
+                index++;
+                contentSoFar.push(this.getChatDateComponent(currDateTime, index));
+            }
+            index++;
+            contentSoFar.push(msg.getComponentToRender(index));
+            return contentSoFar;
+        }, [this.getChatDateComponent(currDateTime, index)]);
 
         return (
             <View style={chatInputStyles.outer}>
@@ -99,8 +141,9 @@ class ChatView extends Component {
                     ref={(ref) => {
                         this.scrollView = ref
                     }}
+                    onScroll={this.checkIfBottomReached}
                     style={chatInputStyles.messages}>
-                    {messages}
+                    {scrollViewContent}
                 </ScrollView>
                 <InputBar onSendPressed={this.sendMessage}
                           onSizeChange={this._onInputSizeChange}

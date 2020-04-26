@@ -34,6 +34,7 @@ export const chatInputStyles = StyleSheet.create({
         height: '50%',
         flex: 1,
         fontSize: 17,
+        maxHeight: 30,
         paddingHorizontal: 10
     },
 

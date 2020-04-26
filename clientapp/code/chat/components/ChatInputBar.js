@@ -18,6 +18,7 @@ export class InputBar extends Component {
                            value={this.props.text}/>
                 <ImagePickerView
                     onPress={this.props.onSendPressed}
+                    onContentSizeChange={this.props.onSizeChange}
                     receiverId={this.props.receiverId}
                 />
                 <Icon

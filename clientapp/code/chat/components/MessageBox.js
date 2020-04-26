@@ -57,11 +57,13 @@ export class ImageContent extends Component {
                 style={{borderRadius: 15, marginTop: 4, marginBottom: 5, width: 250, height: 120}}
             >
                 <Lightbox navigator={this.props.navigation}
+                          underlayColor={"#517fa4"}
                 >
                     <Image
                         style={{
                             width: "100%",
                             height: "100%",
+                            borderRadius: 15,
                         }}
                         resizeMode={"cover"}
                         source={{uri: this.props.url}}

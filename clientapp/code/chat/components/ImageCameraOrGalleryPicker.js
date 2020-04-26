@@ -47,6 +47,7 @@ class ImageCameraOrGalleryPicker extends Component {
     };
 
     openActionSheetImagePicker = () => {
+        this.props.onContentSizeChange();
         const options = ['Camera', 'Gallery'];
         const cancelButtonIndex = 2;
 
