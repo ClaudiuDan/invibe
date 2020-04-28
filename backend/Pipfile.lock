@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "f9268451c7a0c54f866cb2756f96a4001117281df6536a885fa8667d7ac1d6b2"
+            "sha256": "a3f4159d5d680cda4714abaac84fab696fcaef144e88091221771d46b7f0c92e"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -57,6 +57,27 @@
                 "sha256:b6feb6455337df834f6c9962d6ccf771515b7d939bca142b29c20c2376bc6111"
             ],
             "version": "==20.2.0"
+        },
+        "azure-common": {
+            "hashes": [
+                "sha256:ce0f1013e6d0e9faebaf3188cc069f4892fc60a6ec552e3f817c1a2f92835054",
+                "sha256:fd02e4256dc9cdd2d4422bc795bdca2ef302f7a86148b154fbf4ea1f09da400a"
+            ],
+            "version": "==1.1.25"
+        },
+        "azure-storage-blob": {
+            "hashes": [
+                "sha256:a8e91a51d4f62d11127c7fd8ba0077385c5b11022f0269f8a2a71b9fc36bef31",
+                "sha256:b90323aad60f207f9f90a0c4cf94c10acc313c20b39403398dfba51f25f7b454"
+            ],
+            "version": "==2.1.0"
+        },
+        "azure-storage-common": {
+            "hashes": [
+                "sha256:b01a491a18839b9d05a4fe3421458a0ddb5ab9443c14e487f40d16f9a1dc2fbe",
+                "sha256:ccedef5c67227bc4d6670ffd37cec18fb529a1b7c3a5e53e4096eb0cf23dc73f"
+            ],
+            "version": "==2.1.0"
         },
         "boto3": {
             "hashes": [
@@ -217,6 +238,17 @@
             ],
             "index": "pypi",
             "version": "==0.9.5"
+        },
+        "django-storages": {
+            "extras": [
+                "azure"
+            ],
+            "hashes": [
+                "sha256:3103991c2ee8cef8a2ff096709973ffe7106183d211a79f22cf855f33533d924",
+                "sha256:a59e9923cbce7068792f75344ed7727021ee4ac20f227cf17297d0d03d141e91"
+            ],
+            "index": "pypi",
+            "version": "==1.9.1"
         },
         "django-unixdatetimefield": {
             "hashes": [

@@ -30,9 +30,6 @@ CORS_ALLOW_HEADERS = list(default_headers)
 
 ALLOWED_HOSTS = [".herokuapp.com", "127.0.0.1", "localhost"]
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -53,12 +50,14 @@ INSTALLED_APPS = [
     'rest_auth',
     'corsheaders',
 
-    'allauth', 
-    'allauth.account', 
-    'allauth.socialaccount', 
-    'allauth.socialaccount.providers.facebook', #
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.facebook',  #
+
+    'storages',
 ]
-#facebook
+# facebook
 SITE_ID = 4
 
 REST_FRAMEWORK = {
@@ -165,8 +164,23 @@ USE_TZ = True
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
-STATIC_URL = '/static/'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Before using Azure as a storage option
+# STATIC_URL = '/static/'
+# STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# MEDIA_LOCATION = "/media"
+# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+DEFAULT_FILE_STORAGE = 'invibe.custom_azure.AzureMediaStorage'
+STATICFILES_STORAGE = 'invibe.custom_azure.AzureStaticStorage'
+
+STATIC_LOCATION = "static"
+MEDIA_LOCATION = "media"
+
+AZURE_ACCOUNT_NAME = os.environ['AZURE_ACCOUNT_NAME']
+AZURE_CUSTOM_DOMAIN = f'{AZURE_ACCOUNT_NAME}.blob.core.windows.net'
+STATIC_URL = f'https://{AZURE_CUSTOM_DOMAIN}/{STATIC_LOCATION}/'
+MEDIA_URL = f'https://{AZURE_CUSTOM_DOMAIN}/{MEDIA_LOCATION}/'
 
 LOGIN_URL = "/login/"
 
@@ -177,7 +191,7 @@ AUTHENTICATION_BACKENDS = (
 
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 
-#without this line we get a crash from importing facebookview (why?)
+# without this line we get a crash from importing facebookview (why?)
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
