@@ -8,7 +8,8 @@ export default class ChatMessage {
                 sent = false,
                 datetime = new Date(),
                 createdTimestamp = Date.now(),
-                id = Math.floor(Math.random() * 1e9)
+                id = Math.floor(Math.random() * 1e9),
+                seen = false,
     ) {
         if (new.target === ChatMessage) {
             throw new TypeError("Cannot construct Abstract instances of ChatMessage directly");
@@ -20,6 +21,7 @@ export default class ChatMessage {
         this._id = id;
         this._receiver = receiver.toString();
         this._saveContent = saveContent;
+        this._seen = seen;
     }
     isEqual(chatMessage) {
         if (!chatMessage) {
@@ -30,13 +32,11 @@ export default class ChatMessage {
         return (this.direction === "right" && this.createdTimestamp === chatMessage.createdTimestamp) || // Own message, not always has a db generated id
             (this.direction === "left" && this.id === chatMessage.id);
     }
-
     getUniqueKey() {
         return this.direction === "right" ?
             "r-" + this.createdTimestamp.toString() :
             "l-" + this.id.toString();
     }
-
     save() {
         saveToLocalStorage(
             this.getUniqueKey(),
@@ -53,6 +53,7 @@ export default class ChatMessage {
             createdTimestamp: this.createdTimestamp,
             sent: this.sent,
             id: this.id,
+            seen: this.seen,
         }
     }
 
@@ -92,5 +93,13 @@ export default class ChatMessage {
 
     get saveContent() {
         return this._saveContent;
+    }
+
+    get seen() {
+        return this._seen;
+    }
+
+    set seen(value) {
+        this._seen = value;
     }
 }

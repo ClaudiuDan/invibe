@@ -14,7 +14,7 @@ export default class TextChatMessage extends ChatMessage {
     }
 
     static instanceFromDictionary(dic) {
-        return new TextChatMessage(dic.text, dic.direction, dic.receiver, false, dic.sent, dic.datetime, dic.createdTimestamp, dic.id);
+        return new TextChatMessage(dic.text, dic.direction, dic.receiver, false, dic.sent, dic.datetime, dic.createdTimestamp, dic.id, dic.seen);
     }
 
     getComponentToRender(key) {
@@ -24,6 +24,7 @@ export default class TextChatMessage extends ChatMessage {
                         text={this.text}
                         datetime={this.datetime}
                         sent={this.sent}
+                        seen={this.seen}
                         content={<TextContent text={this.text} direction={this.direction}/>}
             />
         );

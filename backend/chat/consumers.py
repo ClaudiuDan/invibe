@@ -62,6 +62,9 @@ class ChatConsumer(WebsocketConsumer):
     def new_message(self, message):
         self.send(message['text'])
 
+    def messages_read(self, message):
+        self.send(message['text'])
+
     def _handshake(self):
         async_to_sync(self.channel_layer.group_add)(str(self.scope["user"].pk), self.channel_name)
 
@@ -88,6 +91,7 @@ class ChatConsumer(WebsocketConsumer):
             'created_timestamp': new_message.created_timestamp,
             'datetime': json.dumps(new_message.server_received_datetime, cls=DjangoJSONEncoder),
             'id': new_message.pk,
+            'seen': new_message.is_seen,
         }
 
         # Save type specific message data
@@ -128,13 +132,29 @@ class ChatConsumer(WebsocketConsumer):
         return broadcast, reply
 
     def _messages_read(self, data):
-        sender = self.scope["user"].pk
-        receiver = data['receiver']
+        sender = str(data["sender"])
+        receiver = self.scope["user"].pk
 
-        query = Message.objects.filter(sender=sender, receiver=receiver)
+        query = Message.objects.filter(is_seen=False, sender=sender, receiver=receiver,
+                                       created_timestamp__lte=data["created_timestamp"])
         for message in query:
-            message.read = True
+            message.is_seen = True
             message.save()
+
+        resp = {
+            'type': 'messages_read',
+            'receiver': receiver,
+            'up_to_created_timestamp': data["created_timestamp"]
+        }
+
+        async_to_sync(self.channel_layer.group_send)(sender, {
+            'type': 'messages.read',
+            'text': json.dumps(resp, cls=DjangoJSONEncoder)
+        })
+
+        resp['type'] = 'messages_read_echo'
+        resp['receiver'] = sender
+        self.send(json.dumps(resp, cls=DjangoJSONEncoder))
 
     def disconnect(self, close_code):
         async_to_sync(self.channel_layer.group_discard)(str(self.scope["user"].pk), self.channel_name)

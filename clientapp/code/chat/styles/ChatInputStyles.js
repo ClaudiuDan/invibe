@@ -31,11 +31,11 @@ export const chatInputStyles = StyleSheet.create({
         borderWidth: 1,
         alignItems: "center",
         borderColor: 'gray',
-        height: '50%',
         flex: 1,
         fontSize: 17,
-        maxHeight: 30,
-        paddingHorizontal: 10
+        maxHeight: 75,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
     },
 
     sendButton: {

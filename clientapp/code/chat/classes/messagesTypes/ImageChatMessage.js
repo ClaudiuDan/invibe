@@ -16,7 +16,7 @@ export default class ImageChatMessage extends ChatMessage {
 
     static instanceFromDictionary(dic) {
         return new ImageChatMessage(dic.imageExtension, dic.base64Content, dic.direction, dic.receiver,
-            false, dic.sent, dic.datetime, dic.createdTimestamp, dic.id);
+            false, dic.sent, dic.datetime, dic.createdTimestamp, dic.id, dic.seen);
     }
 
     getComponentToRender(key) {
@@ -26,6 +26,7 @@ export default class ImageChatMessage extends ChatMessage {
                         text={this.text}
                         datetime={this.datetime}
                         sent={this.sent}
+                        seen={this.seen}
                         content={<ImageContent key={key}
                                                url={`data:image/${this.imageExtension};base64,${this.base64Content}`}/>}
             />

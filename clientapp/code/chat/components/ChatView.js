@@ -74,13 +74,33 @@ class ChatView extends Component {
             this.setState({
                 chatInfo: this.props.chatsList.chatsInfo[this.props.receiverId],
             });
+
             setTimeout(() => {
                 if (this.state.bottomReached) {
                     this.scrollView.scrollToEnd()
                 }
             }, 20);
+
+            setTimeout(this.checkForMessageReads)
         }
     }
+
+    checkForMessageReads = () => {
+        let createdDateTime = null;
+        this.props.chatsList.chatsInfo[this.props.receiverId].messages.forEach(msg => {
+            if (msg.direction === "left" && !msg.seen) {
+                console.log("here")
+                createdDateTime = msg.createdTimestamp;
+            }
+        });
+        if (createdDateTime && this.props.ws.readyState === WebSocket.OPEN) {
+            this.props.ws.send(JSON.stringify({
+                type: "messages_read",
+                sender: this.props.receiverId,
+                created_timestamp: createdDateTime
+            }))
+        }
+    };
 
     createTextMessage = () => this.state.inputBarText ?
         new TextChatMessage(

@@ -15,7 +15,9 @@ export class InputBar extends Component {
                            multiline={true}
                            onChangeText={this.props.onChangeText}
                            onContentSizeChange={this.props.onSizeChange}
-                           value={this.props.text}/>
+                           value={this.props.text}
+                            placeholder={"Text Message"}
+                />
                 <ImagePickerView
                     onPress={this.props.onSendPressed}
                     onContentSizeChange={this.props.onSizeChange}

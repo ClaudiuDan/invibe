@@ -32,7 +32,8 @@ export function messageFromServerData(direction, data) {
         true,
         parseISOString(data.datetime),
         data.created_timestamp,
-        data.id
+        data.id,
+        data.seen
     ];
 
     switch (data.message_type.toString()) {

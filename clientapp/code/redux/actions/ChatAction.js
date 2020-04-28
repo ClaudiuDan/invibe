@@ -1,6 +1,6 @@
 import Axios from "axios";
 import {ADD_CHAT, ADD_MESSAGE, SET_CHAT, SET_CHATSLIST, UPDATE_MESSAGE} from "../actions/Types";
-import {ADD_WEBSOCKET_CONNECTION, DELETE_CHAT, RETRY_MESSAGES} from "./Types";
+import {ADD_WEBSOCKET_CONNECTION, DELETE_CHAT, MESSAGES_READ, RETRY_MESSAGES} from "./Types";
 import ChatInfo from "../../chat/classes/ChatInfo";
 import ChatsList from "../../chat/classes/ChatsList";
 import {messageFromServerData} from "../../Utils/ChatUtils";
@@ -181,6 +181,24 @@ export const openWebSocketForChat = () => dispatch => {
                 }
             });
 
+        } else if (messageData.type === 'messages_read') {
+          dispatch({
+              type: MESSAGES_READ,
+              payload: {
+                  receiver: messageData.receiver,
+                  up_to_created_timestamp: messageData.up_to_created_timestamp,
+                  direction: "right"
+              }
+          })
+        } else if (messageData.type === 'messages_read_echo') {
+            dispatch({
+                type: MESSAGES_READ,
+                payload: {
+                    receiver: messageData.receiver,
+                    up_to_created_timestamp: messageData.up_to_created_timestamp,
+                    direction: "left"
+                }
+            })
         } else if (messageData.type === '__pong__') {
             clearTimeout(closeConnection);
             setTimeout(() => {

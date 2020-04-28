@@ -3,6 +3,7 @@ import {
     ADD_MESSAGE,
     ADD_WEBSOCKET_CONNECTION,
     DELETE_CHAT,
+    MESSAGES_READ,
     RETRY_MESSAGES,
     SET_CHAT,
     SET_CHATSLIST,
@@ -70,7 +71,7 @@ function chatReducer(state = {}, action) {
                 chatsList: newChatsList,
             };
 
-            //TODO: delete from local memory
+        //TODO: delete from local memory
         case DELETE_CHAT:
             receiver = action.payload.receiver;
 
@@ -130,7 +131,8 @@ function chatReducer(state = {}, action) {
                 message.sendMessageViaWebSocket(state.webSocket);
             }
 
-            chatsInfo[receiver] = new ChatInfo(receiver, chatsInfo[receiver].id, true, chatsList.maxOrd + 1,
+            chatsInfo[receiver] = new ChatInfo(receiver, chatsInfo[receiver].id, true,
+                chatsList.maxOrd + 1,
                 [...chatsInfo[receiver].messagesKeys, message.getUniqueKey()],
                 [...chatsInfo[receiver].messages, message]);
 
@@ -143,6 +145,20 @@ function chatReducer(state = {}, action) {
             message = action.payload.message;
             chatsInfo[message.receiver] = chatsInfo[message.receiver].updateMessage(message);
 
+            return {
+                ...state,
+                chatsList: new ChatsList({...chatsInfo})
+            };
+
+        case MESSAGES_READ:
+
+            // TODO: this check is for when the messages_read is received before creating a chat info. Replace this with proper handling
+            if (!chatsInfo[action.payload.receiver]) {
+                return state;
+            }
+
+            chatsInfo[action.payload.receiver] = chatsInfo[action.payload.receiver]
+                .markMessagesAsRead(action.payload.up_to_created_timestamp, action.payload.direction);
             return {
                 ...state,
                 chatsList: new ChatsList({...chatsInfo})

@@ -22,7 +22,7 @@ export default class ChatInfo {
     }
 
     updateMessage(newMessage) {
-        const index = this._messages.findIndex(msg => {
+        const index = this.messages.findIndex(msg => {
             return msg.getUniqueKey() === newMessage.getUniqueKey()
         });
         if (index === -1) {
@@ -36,6 +36,24 @@ export default class ChatInfo {
             this.ord,
             this.messagesKeys,
             [...this.messages.slice(0, index), newMessage, ...this.messages.slice(index + 1)]
+        );
+    }
+
+    markMessagesAsRead(upToCreatedDatetime, direction) {
+        this.messages.forEach(msg => {
+            if (msg.direction === direction && msg.createdTimestamp <= upToCreatedDatetime) {
+                msg.seen = true;
+                msg.save();
+            }
+        });
+
+        return new ChatInfo(
+            this.receiver,
+            this.id,
+            false,
+            this.ord,
+            this.messagesKeys,
+            this.messages,
         );
     }
 

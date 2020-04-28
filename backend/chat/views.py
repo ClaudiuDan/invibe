@@ -33,6 +33,7 @@ def get_message_dictionary_from_message(message):
         "receiver": message.receiver.pk,
         "sender": message.sender.pk,
         'message_type': message.message_type,
+        "seen": message.is_seen,
     }
 
     specific_message_data = get_specific_message_data_from_message(message)

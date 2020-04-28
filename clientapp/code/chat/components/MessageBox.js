@@ -31,7 +31,9 @@ export class MessageBox extends Component {
     }
 
     getDateText() {
-        const status = this.props.direction === "left" ? "" : this.props.sent ? "Sent" : "Sending";
+        const status = this.props.direction === "left" ? "" :
+            this.props.seen ? "Seen" :
+                this.props.sent ? "Sent" : "Sending";
         const bubbleTextDate = this.props.direction === "left" ? {color: "#3a3a3a"} : {color: "#d8d6d3"};
 
         return <Text style={{...bubbleTextDate, textAlign: "left", marginLeft: 2}}>
