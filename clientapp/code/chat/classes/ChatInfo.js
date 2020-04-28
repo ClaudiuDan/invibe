@@ -61,7 +61,9 @@ export default class ChatInfo {
         const messages = [];
         for (const msgKey of this.messagesKeys) {
             const message = await retrieveMessage(msgKey);
-            messages.push(message)
+            if (message) {
+                messages.push(message)
+            }
         }
         return messages;
     }
@@ -129,3 +131,9 @@ export default class ChatInfo {
         return this._receiver;
     }
 }
+
+export const ChatInfoStatus = {
+  UNLOADED: "UNLOADED",
+  LOADING: "LOADING",
+  LOADED: "LOADED"
+};

@@ -1,7 +1,13 @@
 import Axios from "axios";
 import {ADD_CHAT, ADD_MESSAGE, SET_CHAT, SET_CHATSLIST, UPDATE_MESSAGE} from "../actions/Types";
-import {ADD_WEBSOCKET_CONNECTION, DELETE_CHAT, MESSAGES_READ, RETRY_MESSAGES} from "./Types";
-import ChatInfo from "../../chat/classes/ChatInfo";
+import {
+    ADD_WEBSOCKET_CONNECTION,
+    DELETE_CHAT,
+    MESSAGES_READ,
+    RETRY_MESSAGES,
+    SET_CHAT_INFO_LOADING_STATUS
+} from "./Types";
+import ChatInfo, {ChatInfoStatus} from "../../chat/classes/ChatInfo";
 import ChatsList from "../../chat/classes/ChatsList";
 import {messageFromServerData} from "../../Utils/ChatUtils";
 
@@ -87,7 +93,9 @@ export const deleteChat = (chat) => dispatch => {
 // TODO: Consider storing only the last n messages in the storage(Consider doing the same for the backend call)
 // TODO: Consider adding to the current list of chats(or updating it) instead of replacing it
 export const getChat = (receiver) => dispatch => {
-    console.log("get chat");
+
+    dispatch(setChatInfoLoadingStatus(receiver, ChatInfoStatus.LOADING));
+
     Axios
         .get(`/chat/get_chat/`, {params: {receiver: receiver}})
         .then(response => {
@@ -109,21 +117,37 @@ export const getChat = (receiver) => dispatch => {
                     chat: newMessage.sort((msg1, msg2) => msg1.datetime - msg2.datetime),
                     isRetrieve: false,
                 }
-            })
+            });
+
+            dispatch(setChatInfoLoadingStatus(receiver, ChatInfoStatus.LOADED));
+
         })
         .catch(error => console.log(error));
 };
 
 export const retrieveChat = (chatInfo) => dispatch => {
+
+    dispatch(setChatInfoLoadingStatus(chatInfo.receiver, ChatInfoStatus.LOADING));
+
     chatInfo.retrieveMessages().then(chat => {
-        dispatch({
-            type: SET_CHAT,
-            payload: {
-                receiver: chatInfo.receiver,
-                chat: chat,
-                isRetrieve: true,
+            console.log("Retrieved", chat.length, "messages from memory.");
+            dispatch({
+                type: SET_CHAT,
+                payload: {
+                    receiver: chatInfo.receiver,
+                    chat: chat,
+                    isRetrieve: true,
+                }
+            });
+
+            if (chat.length > 0) {
+                dispatch(setChatInfoLoadingStatus(chatInfo.receiver, ChatInfoStatus.LOADED));
             }
-        })}
+
+            setTimeout(() => {
+                dispatch(getChat(chatInfo.receiver))
+            }, 200);
+        }
     ).catch(err => console.log("Error in retrieveChat Action.", err));
 };
 
@@ -182,14 +206,14 @@ export const openWebSocketForChat = () => dispatch => {
             });
 
         } else if (messageData.type === 'messages_read') {
-          dispatch({
-              type: MESSAGES_READ,
-              payload: {
-                  receiver: messageData.receiver,
-                  up_to_created_timestamp: messageData.up_to_created_timestamp,
-                  direction: "right"
-              }
-          })
+            dispatch({
+                type: MESSAGES_READ,
+                payload: {
+                    receiver: messageData.receiver,
+                    up_to_created_timestamp: messageData.up_to_created_timestamp,
+                    direction: "right"
+                }
+            })
         } else if (messageData.type === 'messages_read_echo') {
             dispatch({
                 type: MESSAGES_READ,
@@ -218,6 +242,16 @@ export const openWebSocketForChat = () => dispatch => {
         type: ADD_WEBSOCKET_CONNECTION,
         payload: {
             ws: ws
+        }
+    })
+};
+
+export const setChatInfoLoadingStatus = (receiver, loading) => dispatch => {
+    dispatch({
+        type: SET_CHAT_INFO_LOADING_STATUS,
+        payload: {
+            receiver: receiver,
+            loading: loading
         }
     })
 };

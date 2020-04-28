@@ -6,6 +6,7 @@ import {
     MESSAGES_READ,
     RETRY_MESSAGES,
     SET_CHAT,
+    SET_CHAT_INFO_LOADING_STATUS,
     SET_CHATSLIST,
     UPDATE_MESSAGE
 } from "../actions/Types";
@@ -169,6 +170,16 @@ function chatReducer(state = {}, action) {
             return {
                 ...state,
                 webSocket: action.payload.ws,
+            };
+
+        case SET_CHAT_INFO_LOADING_STATUS:
+
+            return {
+                ...state,
+                isChatInfoLoading: {
+                    ...state.isChatInfoLoading,
+                    [action.payload.receiver]: action.payload.loading,
+                }
             };
 
         default:

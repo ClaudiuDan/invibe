@@ -12,6 +12,7 @@ const initialState = {
         },
     chat: {
         chatsList: new ChatsList(),
+        isChatInfoLoading: {},
         webSocket: null,
     }
 };
