@@ -1,7 +1,13 @@
 import React, {Component} from 'react';
 import {ActivityIndicator, Dimensions, Keyboard, ScrollView, Text, View,} from 'react-native';
 import {connect} from "react-redux";
-import {addMessage, retrieveChat, setChatInfoLoadingStatus} from "../../redux/actions/ChatAction";
+import {
+    addMessage,
+    getChat,
+    retrieveChat,
+    retrieveImages,
+    setChatInfoLoadingStatus
+} from "../../redux/actions/ChatAction";
 import {chatInputStyles} from "../styles/ChatInputStyles";
 import {InputBar} from "./ChatInputBar";
 import TextChatMessage from "../classes/messagesTypes/TextChatMessage";
@@ -15,27 +21,23 @@ class ChatView extends Component {
     constructor(props) {
         super(props);
 
-        const toLoad = !this.props.chatsList.chatsInfo[this.props.receiverId].messages.length;
-
         this.state = {
             chatInfo: this.props.chatsList.chatsInfo[this.props.receiverId],
             inputBarText: '',
             bottomReached: true,
-            loading: toLoad
+            loading: this.getChatInfoStatus() === ChatInfoStatus.UNLOADED
         };
-
-        if (toLoad) {
-            this.props.setChatInfoLoadingStatus(this.props.receiverId, ChatInfoStatus.UNLOADED);
-        }
     }
 
     componentDidMount() {
         Keyboard.addListener('keyboardDidShow', this.scrollToEndTimeout);
 
         setTimeout(() => {
+            // this.props.getChat(this.state.chatInfo.receiver, false);
             if (this.getChatInfoStatus() === ChatInfoStatus.UNLOADED) {
-                this.setState({loading: true});
                 this.props.retrieveChat(this.state.chatInfo);
+            } else if (this.getChatInfoStatus() === ChatInfoStatus.LOADED) {
+                this.props.getChat(this.state.chatInfo.receiver, true); // Only get the updates from receiver
             }
         });
 
@@ -73,8 +75,9 @@ class ChatView extends Component {
 
     componentDidUpdate(_prevProps, _prevState, _snapshot) {
 
-        if (this.getChatInfoStatus() === ChatInfoStatus.LOADED && this.state.loading) {
+        if (this.state.loading && this.getChatInfoStatus() === ChatInfoStatus.LOADED) {
             this.setState({loading: false});
+            this.props.retrieveImages(this.props.chatsList.chatsInfo[this.props.receiverId]);
         }
 
         if (this.props.chatsList.chatsInfo[this.props.receiverId] !== this.state.chatInfo) {
@@ -208,5 +211,5 @@ const mapStateToProps = state => ({
 });
 
 
-export default connect(mapStateToProps, {addMessage, retrieveChat, setChatInfoLoadingStatus})(ChatView);
+export default connect(mapStateToProps, {addMessage, retrieveChat, setChatInfoLoadingStatus, getChat, retrieveImages})(ChatView);
 

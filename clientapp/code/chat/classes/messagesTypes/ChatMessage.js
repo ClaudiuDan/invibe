@@ -23,6 +23,7 @@ export default class ChatMessage {
         this._saveContent = saveContent;
         this._seen = seen;
     }
+
     isEqual(chatMessage) {
         if (!chatMessage) {
             return false;
@@ -37,6 +38,7 @@ export default class ChatMessage {
             "r-" + this.createdTimestamp.toString() :
             "l-" + this.id.toString();
     }
+
     save() {
         saveToLocalStorage(
             this.getUniqueKey(),

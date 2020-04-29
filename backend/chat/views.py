@@ -59,8 +59,14 @@ class ChatAPIView(APIView):
         u1 = self.request.query_params.get('receiver')
         u2 = request.user.pk
 
-        query = Message.objects.filter(Q(sender=u1, receiver=u2) | Q(sender=u2, receiver=u1)).order_by(
-            'server_received_datetime')
+        only_updates = self.request.query_params.get('only_updates', False) == 'true'
+
+        if only_updates:
+            query = Message.objects.filter(sender=u1, receiver=u2, is_seen=False).order_by(
+                'server_received_datetime')
+        else:
+            query = Message.objects.filter(Q(sender=u1, receiver=u2) | Q(sender=u2, receiver=u1)).order_by(
+                'server_received_datetime')
 
         messages = []
         for message in query:

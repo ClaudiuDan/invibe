@@ -12,7 +12,6 @@ import {
 } from "../actions/Types";
 import ChatsList from "../../chat/classes/ChatsList";
 import ChatInfo from "../../chat/classes/ChatInfo";
-import {mergeSortedArrays} from "../../Utils/Utils";
 
 function chatReducer(state = {}, action) {
     const chatsInfo = state.chatsList ? state.chatsList.chatsInfo : null;
@@ -91,11 +90,19 @@ function chatReducer(state = {}, action) {
 
             // Keep messages which have not been sent
             if (receiver in chatsInfo) {
-                const chatMessagesSet = new Set(chat.map(msg => msg.getUniqueKey()));
-                chat = mergeSortedArrays(
-                    chatsInfo[receiver].messages.filter(msg => !(msg.sent || chatMessagesSet.has(msg.getUniqueKey()))),
-                    chat,
-                    (msg1, msg2) => msg1.datetime < msg2.datetime);
+                if (action.payload.onlyUpdates) {
+                    // Only add the new messages received to the end of the chat
+                    if (chat.length === 0) {
+                        return state;
+                    }
+
+                    chat = [...chatsInfo[receiver].messages, ...chat];
+                } else {
+                    // Set the chat with the messages gathered from the db but keep the messages which have not been sent
+                    const chatMessagesSet = new Set(chat.map(msg => msg.getUniqueKey()));
+                    const sendingMessages = chatsInfo[receiver].messages.filter(msg => !(msg.sent || chatMessagesSet.has(msg.getUniqueKey())));
+                    chat = [...chat, ...sendingMessages];
+                }
             }
 
             chatsInfo[receiver] = receiver in chatsInfo

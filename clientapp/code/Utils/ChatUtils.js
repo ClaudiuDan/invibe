@@ -3,7 +3,7 @@ import {messageType} from "../chat/classes/messagesTypes/ChatMessageTypes";
 import TextChatMessage from "../chat/classes/messagesTypes/TextChatMessage";
 import ImageChatMessage from "../chat/classes/messagesTypes/ImageChatMessage";
 
-export async function retrieveMessage(key) {
+const retrieveMessage = async (key) => {
     const value = await retrieveFromLocalStorage(
         key,
         "Could not retrieve message with unique key " + key + " from local storage."
@@ -22,9 +22,10 @@ export async function retrieveMessage(key) {
             console.log("Should not reach this point. Check retrieveMessage in ChatUtils.");
             return null;
     }
-}
+};
 
-export function messageFromServerData(direction, data) {
+const messageFromServerData = (direction, data) => {
+
     const messageArgs = [
         direction,
         direction === "left" ? data.sender : data.receiver,
@@ -35,7 +36,6 @@ export function messageFromServerData(direction, data) {
         data.id,
         data.seen
     ];
-
     switch (data.message_type.toString()) {
 
         case "text_message":
@@ -55,4 +55,7 @@ export function messageFromServerData(direction, data) {
             console.log("Should not reach this point. Check retrieveMessage in ChatUtils.");
             return null;
     }
-}
+
+};
+
+export {messageFromServerData, retrieveMessage};

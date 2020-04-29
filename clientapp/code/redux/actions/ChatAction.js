@@ -10,6 +10,8 @@ import {
 import ChatInfo, {ChatInfoStatus} from "../../chat/classes/ChatInfo";
 import ChatsList from "../../chat/classes/ChatsList";
 import {messageFromServerData} from "../../Utils/ChatUtils";
+import ImageChatMessage from "../../chat/classes/messagesTypes/ImageChatMessage";
+import * as FileSystem from "expo-file-system";
 
 const WebSocketURL = 'wss://invibes.herokuapp.com/chat/';
 
@@ -92,30 +94,30 @@ export const deleteChat = (chat) => dispatch => {
 
 // TODO: Consider storing only the last n messages in the storage(Consider doing the same for the backend call)
 // TODO: Consider adding to the current list of chats(or updating it) instead of replacing it
-export const getChat = (receiver) => dispatch => {
-
+export const getChat = (receiver, onlyUpdates) => dispatch => {
     dispatch(setChatInfoLoadingStatus(receiver, ChatInfoStatus.LOADING));
+    console.log("get chat", "only updates", onlyUpdates);
 
     Axios
-        .get(`/chat/get_chat/`, {params: {receiver: receiver}})
+        .get(`/chat/get_chat/`, {params: {receiver: receiver, only_updates: onlyUpdates}})
         .then(response => {
-            const newMessage = [];
+            const newMessages = [];
             JSON.parse(response.data).messages
                 .forEach(message => {
                     if (message.sender.toString() === receiver.toString()) {
-                        newMessage.push(messageFromServerData('left', message))
+                        newMessages.push(messageFromServerData('left', message))
                     } else {
-                        newMessage.push(messageFromServerData('right', message))
+                        newMessages.push(messageFromServerData('right', message))
                     }
                 });
-
 
             dispatch({
                 type: SET_CHAT,
                 payload: {
                     receiver: receiver,
-                    chat: newMessage.sort((msg1, msg2) => msg1.datetime - msg2.datetime),
+                    chat: newMessages,
                     isRetrieve: false,
+                    onlyUpdates: onlyUpdates
                 }
             });
 
@@ -137,16 +139,19 @@ export const retrieveChat = (chatInfo) => dispatch => {
                     receiver: chatInfo.receiver,
                     chat: chat,
                     isRetrieve: true,
+                    onlyUpdates: false,
                 }
             });
 
-            if (chat.length > 0) {
+            const onlyUpdates = chat.length > 0;
+
+            if (onlyUpdates) {
                 dispatch(setChatInfoLoadingStatus(chatInfo.receiver, ChatInfoStatus.LOADED));
             }
 
             setTimeout(() => {
-                dispatch(getChat(chatInfo.receiver))
-            }, 200);
+                dispatch(getChat(chatInfo.receiver, onlyUpdates))
+            }, 100);
         }
     ).catch(err => console.log("Error in retrieveChat Action.", err));
 };
@@ -160,7 +165,6 @@ export const addMessage = (message) => dispatch => {
         }
     });
 };
-
 
 export const openWebSocketForChat = () => dispatch => {
     const ws = new WebSocket(WebSocketURL);
@@ -244,6 +248,35 @@ export const openWebSocketForChat = () => dispatch => {
             ws: ws
         }
     })
+};
+
+export const retrieveImages = (chatInfo) => dispatch => {
+    chatInfo.messages.forEach(msg => {
+       if ((msg instanceof ImageChatMessage) && msg.base64Content === "") {
+           FileSystem.readAsStringAsync(msg.path, {encoding: FileSystem.EncodingType.Base64})
+               .then(result => {
+                   msg.base64Content = result;
+                   dispatch({
+                       type: UPDATE_MESSAGE,
+                       payload: {
+                           message: msg,
+                       }
+                   })
+               })
+               .catch(err => {
+                   console.log("Could not retrieve image from chat", err);
+                   //Try to get it from server
+                   // Axios
+                   //     .get(`/chat/get_chat/`, {params: {receiver: receiver, only_updates: onlyUpdates}})
+                   //     .then(response => {
+                   //         imageChatMessage.base64Content = JSON.parse(response.data).imageContent;
+                   //         updateMessageFun(imageChatMessage);
+                   //     })
+                   //     .catch(error => console.log(error));
+                   console.log("Getting it from server");
+               })
+       }
+    });
 };
 
 export const setChatInfoLoadingStatus = (receiver, loading) => dispatch => {
