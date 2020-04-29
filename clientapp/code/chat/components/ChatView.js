@@ -146,16 +146,18 @@ class ChatView extends Component {
         this.props.isChatInfoLoading[this.props.receiverId] : ChatInfoStatus.UNLOADED;
 
     scrollToEndTimeout = (delay = 0, animated = true) => {
-        setTimeout(() => {
-            if (this && this.scrollView) {
-                this.scrollView.scrollToEnd({animated: animated});
-            }
-        }, delay);
+        this.scrollView.scrollToEnd({animated: animated});
+        // TODO: check why setTimeout makes app crash here
+        // new Promise(_ => setTimeout(() => this.scrollView.scrollToEnd({animated: animated}), delay))
+        //     .catch(error => console.log("Error in scrollToEndTimeout", error));
     };
 
     render() {
         const messages = this.state.chatInfo.messages;
-        let scrollViewContent = [this.getChatDateComponent("Start the conversation with an Invibe challenge", 0)];
+        let scrollViewContent = [];
+        if (!this.state.loading) {
+            scrollViewContent.push(this.getChatDateComponent("Start the conversation with an Invibe challenge", 0));
+        }
 
         if (messages.length > 0) {
             let currDateTime = messages[0].datetime;
@@ -175,28 +177,24 @@ class ChatView extends Component {
 
         return (
             <View style={chatInputStyles.outer}>
-                {this.state.loading ? (
-                    <View style={stylesUtils.loading}>
-                        <ActivityIndicator style={{paddingTop: 20}} size="large" color={chatSelectedColour}/>
-                    </View>
-                ) : (
-                    <>
-                        <ScrollView
-                            ref={(ref) => {
-                                this.scrollView = ref
-                            }}
-                            onScroll={this.checkIfBottomReached}
-                            style={chatInputStyles.messages}>
-                            {scrollViewContent}
-                        </ScrollView>
-                        < InputBar onSendPressed={this.sendMessage}
-                                   onSizeChange={() => this.scrollToEndTimeout(0, false)}
-                                   onChangeText={this._onChangeInputBarText}
-                                   createTextMessage={this.createTextMessage}
-                                   receiverId={this.props.receiverId}
-                                   text={this.state.inputBarText}/>
-                    </>
-                )}
+                <ScrollView
+                    ref={(ref) => {
+                        this.scrollView = ref
+                    }}
+                    onScroll={this.checkIfBottomReached}
+                    style={chatInputStyles.messages}>
+                    {scrollViewContent}
+                </ScrollView>
+                < InputBar onSendPressed={this.sendMessage}
+                           onSizeChange={this.scrollToEndTimeout}
+                           onChangeText={this._onChangeInputBarText}
+                           createTextMessage={this.createTextMessage}
+                           receiverId={this.props.receiverId}
+                           text={this.state.inputBarText}/>
+                <View style={stylesUtils.loading}>
+                    <ActivityIndicator style={{paddingTop: 20}} size="large" color={chatSelectedColour}
+                                       animating={this.state.loading}/>
+                </View>
             </View>
         );
     }
@@ -211,5 +209,11 @@ const mapStateToProps = state => ({
 });
 
 
-export default connect(mapStateToProps, {addMessage, retrieveChat, setChatInfoLoadingStatus, getChat, retrieveImages})(ChatView);
+export default connect(mapStateToProps, {
+    addMessage,
+    retrieveChat,
+    setChatInfoLoadingStatus,
+    getChat,
+    retrieveImages
+})(ChatView);
 

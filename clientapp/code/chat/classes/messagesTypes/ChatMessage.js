@@ -8,7 +8,7 @@ export default class ChatMessage {
                 sent = false,
                 datetime = new Date(),
                 createdTimestamp = Date.now(),
-                id = Math.floor(Math.random() * 1e9),
+                id = -Math.floor(Math.random() * 1e9),
                 seen = false,
     ) {
         if (new.target === ChatMessage) {

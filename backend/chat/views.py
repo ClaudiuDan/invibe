@@ -75,6 +75,29 @@ class ChatAPIView(APIView):
         return Response(json.dumps({"messages": messages}, cls=DjangoJSONEncoder), status=status.HTTP_200_OK)
 
 
+class ChatImageAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+
+        try:
+            message_type = MessageTypes(self.request.query_params.get('message_type'))
+        except ValueError as _:
+            return Response({"message_type not supported"}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        message = Message.objects.get(pk=self.request.query_params.get('message_id'))
+        if message.sender != request.user and message.receiver != request.user:
+            return Response({"You don't have permission to get this image"}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        resp = {}
+
+        if message_type == MessageTypes.IMAGE_MESSAGE:
+            message = ImageMessage.objects.get(pk=self.request.query_params.get('message_id'))
+            resp['base64_content'] = encode_image_field_to_base64(message.image)
+
+        return Response(json.dumps(resp, cls=DjangoJSONEncoder), status=status.HTTP_200_OK)
+
+
 class ChatsAPIView(APIView):
     permission_classes = [IsAuthenticated]
 

@@ -12,6 +12,7 @@ import ChatsList from "../../chat/classes/ChatsList";
 import {messageFromServerData} from "../../Utils/ChatUtils";
 import ImageChatMessage from "../../chat/classes/messagesTypes/ImageChatMessage";
 import * as FileSystem from "expo-file-system";
+import {messageTypesForServer} from "../../chat/classes/messagesTypes/ChatMessageTypes";
 
 const WebSocketURL = 'wss://invibes.herokuapp.com/chat/';
 
@@ -264,16 +265,28 @@ export const retrieveImages = (chatInfo) => dispatch => {
                    })
                })
                .catch(err => {
-                   console.log("Could not retrieve image from chat", err);
-                   //Try to get it from server
-                   // Axios
-                   //     .get(`/chat/get_chat/`, {params: {receiver: receiver, only_updates: onlyUpdates}})
-                   //     .then(response => {
-                   //         imageChatMessage.base64Content = JSON.parse(response.data).imageContent;
-                   //         updateMessageFun(imageChatMessage);
-                   //     })
-                   //     .catch(error => console.log(error));
-                   console.log("Getting it from server");
+                   if (msg.id > 0) {
+                       console.log("Could not retrieve image from chat", err);
+                       console.log("Getting it from server");
+                       Axios
+                           .get(`/chat/get_message_image/`, {
+                               params: {
+                                   message_type: messageTypesForServer.IMAGE_MESSAGE,
+                                   message_id: msg.id
+                               }
+                           })
+                           .then(response => {
+                               msg.base64Content = JSON.parse(response.data).base64_content;
+                               msg.save();
+                               dispatch({
+                                   type: UPDATE_MESSAGE,
+                                   payload: {
+                                       message: msg,
+                                   }
+                               })
+                           })
+                           .catch(error => console.log(error));
+                   }
                })
        }
     });

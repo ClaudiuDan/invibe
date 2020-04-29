@@ -58,13 +58,14 @@ export default class ImageChatMessage extends ChatMessage {
     }
 
     sendMessageViaWebSocket(ws) {
-        if (ws.readyState === WebSocket.OPEN) {
+        if (ws.readyState === WebSocket.OPEN && this.base64Content !== "") {
             ws.send(JSON.stringify({
                 type: 'message',  // Specific for the websocket connection with the server
                 message_type: messageTypesForServer.IMAGE_MESSAGE,
                 receiver: this.receiver,
                 created_timestamp: this.createdTimestamp,
                 image_extension: this.imageExtension,
+                base64_content: this.base64Content,
             }));
         }
     }
