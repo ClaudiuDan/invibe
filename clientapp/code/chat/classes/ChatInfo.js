@@ -12,7 +12,6 @@ export default class ChatInfo {
             this.save();
         }
     }
-
     static getMessageKeysFromMessages(messages) {
         return messages.map(msg => msg.getUniqueKey());
     }
@@ -129,6 +128,14 @@ export default class ChatInfo {
 
     get receiver() {
         return this._receiver;
+    }
+
+    set messagesKeys(value) {
+        this._messagesKeys = value;
+    }
+
+    set messages(value) {
+        this._messages = value;
     }
 }
 

@@ -33,6 +33,9 @@ function chatReducer(state = {}, action) {
                 for (const receiver in action.payload.chats) {
                     if (!(receiver in chatsInfo) || !chatsInfo[receiver]) {
                         action.payload.chats[receiver].save();
+                    } else {
+                        action.payload.chats[receiver].messages = chatsInfo[receiver].messages;
+                        action.payload.chats[receiver].messagesKeys = chatsInfo[receiver].messagesKeys;
                     }
                 }
             }
