@@ -98,8 +98,9 @@ function chatReducer(state = {}, action) {
                     if (chat.length === 0) {
                         return state;
                     }
-
-                    chat = [...chatsInfo[receiver].messages, ...chat];
+                    
+                    const chatMessagesSet = new Set(chatsInfo[receiver].messages.map(msg => msg.getUniqueKey()));
+                    chat = [...chatsInfo[receiver].messages, ...(chat.filter(msg => !chatMessagesSet.has(msg.getUniqueKey())))];
                 } else {
                     // Set the chat with the messages gathered from the db but keep the messages which have not been sent
                     const chatMessagesSet = new Set(chat.map(msg => msg.getUniqueKey()));
