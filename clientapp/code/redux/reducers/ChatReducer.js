@@ -98,7 +98,7 @@ function chatReducer(state = {}, action) {
                     if (chat.length === 0) {
                         return state;
                     }
-                    
+
                     const chatMessagesSet = new Set(chatsInfo[receiver].messages.map(msg => msg.getUniqueKey()));
                     chat = [...chatsInfo[receiver].messages, ...(chat.filter(msg => !chatMessagesSet.has(msg.getUniqueKey())))];
                 } else {

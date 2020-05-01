@@ -8,6 +8,9 @@ export default class ChatsList {
         if (saveContent) {
             this.save();
         }
+        if (2 in chatsInfo) {
+            console.log(chatsInfo[2].messages.length)
+        }
     }
 
     getMaxOrd() {

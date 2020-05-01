@@ -14,6 +14,7 @@ import {createStackNavigator} from "@react-navigation/stack";
 import {Text} from "react-native";
 import {restoreToken, restoreUserId} from "./code/redux/actions/AuthAction";
 import {ActionSheetProvider} from "@expo/react-native-action-sheet";
+import ImagesViewerScreen from "./code/screens/ImagesViewerScreen";
 
 
 class Main extends Component {
@@ -56,6 +57,10 @@ class Main extends Component {
                                 <Stack.Screen name="Chat" component={U2UChatScreen}
                                               options={({route}) => ({title: 'Chat with user ' + route.params.receiverId})}/>
                                 <Stack.Screen name="Settings" component={SettingsScreen}/>
+                                <Stack.Screen name="ImagesViewer" component={ImagesViewerScreen}
+                                              options={() => ({headerShown: false,
+                                                  cardStyle: { backgroundColor: 'transparent' }})}
+                                />
                             </>
                         )}
                     </Stack.Navigator>
