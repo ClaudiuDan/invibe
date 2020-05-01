@@ -24,7 +24,7 @@ export default class ImageChatMessage extends ChatMessage {
             false, dic.sent, dic.datetime, dic.createdTimestamp, dic.id, dic.seen);
     }
 
-    getComponentToRender(key) {
+    getComponentToRender(key, navigation) {
         return (
             <MessageBox key={key}
                         direction={this.direction}
@@ -33,6 +33,7 @@ export default class ImageChatMessage extends ChatMessage {
                         sent={this.sent}
                         seen={this.seen}
                         content={<ImageContent key={key}
+                                               navigation={navigation}
                                                url={`data:image/${this.imageExtension};base64,${this.base64Content}`}/>}
             />
         );

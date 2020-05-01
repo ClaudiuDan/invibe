@@ -13,6 +13,7 @@ class U2UChatScreen extends Component {
     render() {
         return (
             <ChatView
+                navigation={this.props.navigation}
                 receiverId={this.props.route.params.receiverId}
             />
         );

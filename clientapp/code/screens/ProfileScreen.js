@@ -35,7 +35,7 @@ class ProfileScreen extends Component {
                 <View style={styles.container}>
                     <View style={styles.header}/>
                     <TouchableOpacity style={styles.avatar}
-                                      onPress={() => this.props.navigation.navigate('ImagesViewer', {
+                                      onPress={() => this.props.navigation.push('ImagesViewer', {
                                           images: profileImage,
                                           imageIndex: 0
                                       })}

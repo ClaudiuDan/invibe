@@ -170,7 +170,7 @@ class ChatView extends Component {
                     contentSoFar.push(this.getChatDateComponent(currDateTime.toDateString(), index));
                 }
                 index++;
-                contentSoFar.push(msg.getComponentToRender(index));
+                contentSoFar.push(msg.getComponentToRender(index, this.props.navigation));
                 return contentSoFar;
             }, [this.getChatDateComponent(currDateTime.toDateString(), index)]);
         }

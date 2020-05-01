@@ -17,7 +17,7 @@ export default class TextChatMessage extends ChatMessage {
         return new TextChatMessage(dic.text, dic.direction, dic.receiver, false, dic.sent, dic.datetime, dic.createdTimestamp, dic.id, dic.seen);
     }
 
-    getComponentToRender(key) {
+    getComponentToRender(key, _navigation) {
         return (
             <MessageBox key={key}
                         direction={this.direction}

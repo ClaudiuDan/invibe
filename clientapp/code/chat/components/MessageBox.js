@@ -3,7 +3,6 @@ import React, {Component} from "react";
 import {Image, Text, TouchableOpacity, View} from "react-native";
 import {chatInputStyles} from "../styles/ChatInputStyles";
 import {formatAMPM} from "../../Utils/Utils";
-import Lightbox from "react-native-lightbox";
 import {isOnlyEmojis, unicodeProofStringLength} from "../../Utils/Utils";
 
 export class MessageBox extends Component {
@@ -61,11 +60,12 @@ export class ImageContent extends Component {
     render() {
         return (
             <TouchableOpacity
+                onPress={() => this.props.navigation.push('ImagesViewer', {
+                    images: [{uri: this.props.url}],
+                    imageIndex: 0
+                })}
                 style={{borderRadius: 15, marginTop: 4, marginBottom: 5, width: 250, height: 120}}
             >
-                <Lightbox navigator={this.props.navigation}
-                          underlayColor={"#517fa4"}
-                >
                     <Image
                         style={{
                             width: "100%",
@@ -75,7 +75,6 @@ export class ImageContent extends Component {
                         resizeMode={"cover"}
                         source={{uri: this.props.url}}
                     />
-                </Lightbox>
             </TouchableOpacity>
         )
     }

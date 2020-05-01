@@ -63,7 +63,7 @@ export default class ChatMessage {
         throw new TypeError("Cannot call sendMessageViaWebSocket of ChatMessage; Must be implemented in child class.");
     }
 
-    getComponentToRender(_key) {
+    getComponentToRender(_key, _navigation) {
         throw new TypeError("Cannot call getComponentToRender of ChatMessage; Must be implemented in child class.");
     }
 
