@@ -23,7 +23,7 @@ class HomeScreen extends Component {
             <View>
                 <Button
                     title="Go to Profile"
-                    onPress={() => this.props.navigation.navigate('Profile')}
+                    onPress={() => this.props.navigation.navigate('Profile',  {userId: this.props.userId, editable: true})}
                 />
                 <Button
                     title="Go to Settings"
@@ -40,6 +40,7 @@ class HomeScreen extends Component {
 
 const mapStateToProps = state => ({
     webSocket: state.chat.webSocket,
+    userId: state.auth.userId,
 });
 
 export default connect(mapStateToProps, {openWebSocketForChat, retrieveChatsList})(HomeScreen);
