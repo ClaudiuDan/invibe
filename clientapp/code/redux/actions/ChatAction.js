@@ -252,6 +252,7 @@ export const openWebSocketForChat = () => dispatch => {
 };
 
 export const retrieveImages = (chatInfo) => dispatch => {
+    // TODO: retrieve images in reversed order.
     chatInfo.messages.forEach(msg => {
        if ((msg instanceof ImageChatMessage) && msg.base64Content === "") {
            FileSystem.readAsStringAsync(msg.path, {encoding: FileSystem.EncodingType.Base64})
