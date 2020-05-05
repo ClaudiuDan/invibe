@@ -1,7 +1,7 @@
 import React, {Component} from "react";
 import ImageView from "react-native-image-viewing";
 
-//TODO: Solvw Warning: Can't perform a React state update on an unmounted component. This is a no-op, but it indicates a memory leak in your application
+//TODO: Solve Warning: Can't perform a React state update on an unmounted component. This is a no-op, but it indicates a memory leak in your application
 class ImagesViewerScreen extends Component {
 
     constructor(props) {

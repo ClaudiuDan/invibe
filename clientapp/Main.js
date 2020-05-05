@@ -5,8 +5,8 @@ import {
     HomeScreen,
     LoginScreen,
     ProfileScreen,
-    SettingsScreen,
     RegisterScreen,
+    SettingsScreen,
     U2UChatScreen
 } from "./code/screens/exports";
 import {connect} from "react-redux";
@@ -15,6 +15,7 @@ import {Text} from "react-native";
 import {restoreToken, restoreUserId} from "./code/redux/actions/AuthAction";
 import {ActionSheetProvider} from "@expo/react-native-action-sheet";
 import ImagesViewerScreen from "./code/screens/ImagesViewerScreen";
+import ChatHeader from "./code/chat/components/ChatHeader";
 
 
 class Main extends Component {
@@ -55,11 +56,17 @@ class Main extends Component {
                                 <Stack.Screen name="Profile" component={ProfileScreen}/>
                                 <Stack.Screen name="Chats" component={ChatsScreen}/>
                                 <Stack.Screen name="Chat" component={U2UChatScreen}
-                                              options={({route}) => ({title: 'Chat with user ' + route.params.receiverId})}/>
+                                              options={({route, navigation}) => ({
+                                                  headerTitle: props => <ChatHeader {...props}
+                                                                                    receiverId={route.params.receiverId}
+                                                                                    navigation={navigation}/>,
+                                              })}/>
                                 <Stack.Screen name="Settings" component={SettingsScreen}/>
                                 <Stack.Screen name="ImagesViewer" component={ImagesViewerScreen}
-                                              options={() => ({headerShown: false,
-                                                  cardStyle: { backgroundColor: 'transparent' }})}
+                                              options={() => ({
+                                                  headerShown: false,
+                                                  cardStyle: {backgroundColor: 'transparent'}
+                                              })}
                                 />
                             </>
                         )}

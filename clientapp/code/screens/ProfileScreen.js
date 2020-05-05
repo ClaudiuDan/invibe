@@ -73,7 +73,6 @@ class ProfileScreen extends Component {
 
         this.setState({savingInProgress: true});
 
-        console.log(this.state.editModeChanges);
         Axios
             .post(`/profile/`, this.state.editModeChanges)
             .then(_ => {
