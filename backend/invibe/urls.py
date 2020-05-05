@@ -20,4 +20,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/', include('inv_user.urls')),
     path('chat/', include('chat.urls')),
+    path('profile/', include('user_profile.urls')),
 ]

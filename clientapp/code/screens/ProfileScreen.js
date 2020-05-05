@@ -1,11 +1,14 @@
 import React, {Component} from 'react';
-import {Image, ScrollView, StyleSheet, TextInput, TouchableOpacity, View} from 'react-native';
+import {ActivityIndicator, Image, ScrollView, StyleSheet, TextInput, TouchableOpacity, View} from 'react-native';
 import {chatColour} from "../chat/styles/ChatsScreenStyles";
 import {Icon} from "react-native-elements";
 import ImagePickerView from "../profile/ImageCameraOrGalleryPickerForProfile";
 import {connectActionSheet} from "@expo/react-native-action-sheet";
 import PROFILE_IMAGE_PLACEHOLDER from "../../assets/profile-image-placeholder.png"
+import Axios from "axios";
+import {isObjectEmpty} from "../Utils/Utils";
 
+// TODO: Refactor this such that the current user profile can be cached in redux
 class ProfileScreen extends Component {
 
     constructor(props) {
@@ -14,39 +17,99 @@ class ProfileScreen extends Component {
         this.state = {
             profileImageOpened: true,
             editMode: false,
-            profileImage: {
-                uri: 'https://img5.goodfon.com/wallpaper/nbig/8/2a/emmy-rossum-aktrisa-vzgliad-portret.jpg'
-            },
-            albumImages: [
-                {
-                    uri: 'https://c4.wallpaperflare.com/wallpaper/740/259/689/emmy-rossum-26-wallpaper-preview.jpg'
-                },
-                {
-                    uri: "https://c4.wallpaperflare.com/wallpaper/58/848/937/emmy-rossum-actress-girl-wallpaper-preview.jpg"
-                },
-                {
-                    uri: "https://img5.goodfon.com/wallpaper/nbig/1/4c/emmy-rossum-aktrisa-portret.jpg"
-                }
-            ],
-            name: "Emmy Rossum",
-            shortDescription: "Actor / US / 33",
-            longDescription: "Lorem ipsum dolor sit amet, saepe sapientem eu nam. Qui ne assum electram expetendis, omittam deseruisse consequuntur ius an",
-        }
+            profileImage: PROFILE_IMAGE_PLACEHOLDER,
+            albumImages: [],
+            name: "",
+            shortDescription: "",
+            longDescription: "",
+            editModeChanges: {}, // Preparing the data to be send as a post http request
+            savingInProgress: false,
+            loadingProfile: true,
+        };
     }
 
-    editButtonPressed = () => this.setState({editMode: true});
+
+    componentDidMount() {
+        Axios
+            .get(`/profile/`, {params: {user_id: this.props.route.params.userId, with_album_images: true}})
+            .then(response => {
+                const parsedData = JSON.parse(response.data);
+
+                const profileImage = "profile_image" in parsedData ?
+                    {uri: `data:image/${parsedData.profile_image_extension};base64,${parsedData.profile_image}`} :
+                    PROFILE_IMAGE_PLACEHOLDER;
+
+                const albumImages = parsedData.album_images.map(image => {
+                    return {
+                        uri: `data:image/${image.image_extension};base64,${image.image}`,
+                        createdTimestamp: image.created_timestamp,
+                    };
+                });
+
+                this.setState({
+                    name: parsedData.name,
+                    shortDescription: parsedData.short_description,
+                    longDescription: parsedData.long_description,
+                    profileImage: profileImage,
+                    albumImages: albumImages,
+                    loadingProfile: false,
+                });
+            })
+            .catch(error => {
+                console.log("Could not get user profile from server", this.props.route.params.userId, error);
+                console.log(error.content);
+                this.setState({loadingProfile: false}); //TODO: better error handling here
+            });
+    }
+
+    editButtonPressed = () => this.setState({editMode: true, editModeChanges: {}});
 
     saveButtonPressed = () => {
-        this.setState({editMode: false});
+
+        if (isObjectEmpty(this.state.editModeChanges)) {
+            this.setState({editMode: false, editModeChanges: {}, savingInProgress: false});
+            return;
+        }
+
+        this.setState({savingInProgress: true});
+
+        console.log(this.state.editModeChanges);
+        Axios
+            .post(`/profile/`, this.state.editModeChanges)
+            .then(_ => {
+                this.setState({editMode: false, editModeChanges: {}, savingInProgress: false});
+            }).catch(error => {
+            console.log("Could not save the profile changes", error);
+            this.setState({editMode: false, editModeChanges: {}, savingInProgress: false});
+        });
+
     };
 
-    onNameTextChanged = (text) => this.setState({name: text});
+    onNameTextChanged = (text) => {
+        this.setState({
+            name: text,
+            editModeChanges: {...this.state.editModeChanges, name: text}
+        });
+    };
 
-    onShortDescriptionTextChanged = (text) => this.setState({shortDescription: text});
+    onShortDescriptionTextChanged = (text) => this.setState({
+        shortDescription: text,
+        editModeChanges: {...this.state.editModeChanges, short_description: text}
+    });
 
-    onLongDescriptionTextChanged = (text) => this.setState({longDescription: text});
+    onLongDescriptionTextChanged = (text) => this.setState({
+        longDescription: text,
+        editModeChanges: {...this.state.editModeChanges, long_description: text}
+    });
 
     getEditProfileButton = () => {
+        if (this.state.savingInProgress) {
+            return (
+                <View style={styles.editButton}>
+                    <ActivityIndicator size="large" color={"#bababa"}/>
+                </View>
+            );
+        }
         return this.props.route.params.editable ?
             ((!this.state.editMode) ?
                 <View style={styles.editButton}>
@@ -76,9 +139,14 @@ class ProfileScreen extends Component {
         return this.state.editMode ?
             <View style={styles.editProfileImageButton}>
                 <ImagePickerView
-                    onPress={(uri) => {
+                    onPress={(uri, base64Content, imageExtension) => {
                         this.setState({
                             profileImage: {uri: uri},
+                            editModeChanges: {
+                                ...this.state.editModeChanges,
+                                profile_image: base64Content,
+                                profile_image_extension: imageExtension
+                            }
                         })
                     }}
                 />
@@ -90,9 +158,20 @@ class ProfileScreen extends Component {
         return this.state.editMode ?
             <View style={styles.addAlbumImageButton}>
                 <ImagePickerView
-                    onPress={(uri) => {
+                    onPress={(uri, base64Content, imageExtension) => {
+                        const album_images = "album_images" in this.state.editModeChanges ?
+                            this.state.editModeChanges["album_images"] : [];
+
                         this.setState({
                             albumImages: [...this.state.albumImages, {uri: uri}],
+                            editModeChanges: {
+                                ...this.state.editModeChanges,
+                                album_images: [...album_images, {
+                                    created_timestamp: Date.now(),
+                                    image_extension: imageExtension,
+                                    image_content: base64Content
+                                }],
+                            }
                         })
                     }}
                 />
@@ -119,6 +198,7 @@ class ProfileScreen extends Component {
                 if (buttonIndex === 0) {
                     this.setState({
                         profileImage: PROFILE_IMAGE_PLACEHOLDER,
+                        editModeChanges: {...this.state.editModeChanges, delete_profile_image: true}
                     })
                 }
             },
@@ -142,8 +222,16 @@ class ProfileScreen extends Component {
             },
             buttonIndex => {
                 if (buttonIndex === 0) {
+                    const delete_album_images = "delete_album_images" in this.state.editModeChanges ?
+                        this.state.editModeChanges["delete_album_images"] : [];
+                    const created_timestamp = this.state.albumImages[index].createdTimestamp;
+
                     this.setState({
-                        albumImages: [...this.state.albumImages.slice(0, index), ...this.state.albumImages.slice(index + 1)]
+                        albumImages: [...this.state.albumImages.slice(0, index), ...this.state.albumImages.slice(index + 1)],
+                        editModeChanges: {
+                            ...this.state.editModeChanges,
+                            delete_album_images: [...delete_album_images, {created_timestamp: created_timestamp}],
+                        },
                     })
                 }
             },
@@ -151,6 +239,13 @@ class ProfileScreen extends Component {
     };
 
     render() {
+
+        if (this.state.loadingProfile) {
+            return (
+                <ActivityIndicator style={{paddingTop: "50%", alignSelf: "center"}} size="large" color={"#bababa"}/>
+            )
+        }
+
         const textInputEditModeStyle = this.state.editMode ? {
             borderWidth: 0.5,
             borderColor: "black",

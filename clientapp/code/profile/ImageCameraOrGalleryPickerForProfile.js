@@ -4,7 +4,7 @@ import React, {Component} from 'react';
 import {Icon} from 'react-native-elements'
 import * as ImagePicker from 'expo-image-picker';
 import {connectActionSheet} from '@expo/react-native-action-sheet'
-import {chatColour, chatSelectedColour} from "../chat/styles/ChatsScreenStyles";
+import {chatSelectedColour} from "../chat/styles/ChatsScreenStyles";
 
 class ImageCameraOrGalleryPicker extends Component {
 
@@ -22,7 +22,8 @@ class ImageCameraOrGalleryPicker extends Component {
 
         }).then(result => {
             if (!result.cancelled) {
-                this.props.onPress(`data:image/${this.getExtensionFromFileName(result.uri)};base64,${result.base64}`);
+                this.props.onPress(`data:image/${this.getExtensionFromFileName(result.uri)};base64,${result.base64}`,
+                    result.base64, this.getExtensionFromFileName(result.uri));
             }
         }).catch(err => console.log("Launch camera error in ImagePickerForProfile.", err));
     };
@@ -36,7 +37,8 @@ class ImageCameraOrGalleryPicker extends Component {
 
         }).then(result => {
             if (!result.cancelled) {
-                this.props.onPress(`data:image/${this.getExtensionFromFileName(result.uri)};base64,${result.base64}`);
+                this.props.onPress(`data:image/${this.getExtensionFromFileName(result.uri)};base64,${result.base64}`,
+                    result.base64, this.getExtensionFromFileName(result.uri));
             }
         }).catch(err => console.log("Launch gallery error in ImagePickerForProfile.", err))
     };
