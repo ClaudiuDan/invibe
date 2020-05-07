@@ -1,5 +1,14 @@
 import React, {Component} from 'react';
-import {ActivityIndicator, Image, ScrollView, Text, TextInput, TouchableOpacity, View} from 'react-native';
+import {
+    ActivityIndicator,
+    Image,
+    RefreshControl,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
+} from 'react-native';
 import {Icon} from "react-native-elements";
 import ImagePickerView from "../profile/ImageCameraOrGalleryPickerForProfile";
 import {connectActionSheet} from "@expo/react-native-action-sheet";
@@ -306,7 +315,14 @@ class ProfileScreen extends Component {
             borderColor: "transparent"
         };
 
-        return (<ScrollView>
+        return (<ScrollView
+                refreshControl={
+                    <RefreshControl
+                        refreshing={false}
+                        onRefresh={() => this.props.getProfile(this.state.userId, true)}
+                    />
+                }
+            >
                 <View style={styles.header}/>
                 {this.getEditProfileButton()}
                 <TouchableOpacity style={styles.avatar}
