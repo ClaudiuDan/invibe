@@ -1,8 +1,10 @@
 import React, {Component} from 'react';
-import {Dimensions, Image, Text, TouchableOpacity, View} from "react-native";
-import PROFILE_IMAGE_PLACEHOLDER from "../../../assets/profile-image-placeholder.png"
+import {Dimensions, Image, Text, TouchableWithoutFeedback, View} from "react-native";
 import {chatSelectedColour} from "../styles/ChatsScreenStyles";
-import Axios from "axios";
+import {connect} from "react-redux";
+import {getProfile} from "../../redux/actions/ProfileAction";
+import UserProfile from "../../profile/UserProfile";
+import {profileStatus} from "../../profile/ProfileStatus";
 
 class ChatHeader extends Component {
 
@@ -10,32 +12,34 @@ class ChatHeader extends Component {
         super(props);
 
         this.state = {
-            receiverName: "User " + this.props.receiverId,
-            receiverProfileImage: PROFILE_IMAGE_PLACEHOLDER,
+            userProfile:  this.props.receiverId in this.props.profiles ? this.props.profiles[this.props.receiverId] : new UserProfile(this.props.receiverId)
         }
+        console.log(this.state.userProfile)
     }
 
     componentDidMount() {
-        Axios
-            .get(`/profile/`, {params: {user_id: this.props.receiverId, with_album_images: false}})
-            .then(response => {
-                const parsedData = JSON.parse(response.data);
-
-                const receiverProfileImage = "profile_image" in parsedData ?
-                    {uri: `data:image/${parsedData.profile_image_extension};base64,${parsedData.profile_image}`} :
-                    PROFILE_IMAGE_PLACEHOLDER;
-
-                const receiverName = parsedData.name !== "" ? parsedData.name : this.state.receiverName;
-
-                this.setState({
-                    receiverName: receiverName,
-                    receiverProfileImage: receiverProfileImage,
-                });
-            })
-            .catch(error => {
-                console.log("Could not get user profile from server", this.props.receiverId, error);
-            });
+        if ([profileStatus.UNLOADED, profileStatus.ERROR].includes(this.state.userProfile.status)) {
+            console.log(this.props.receiverId)
+            this.props.getProfile(this.props.receiverId, false);
+        }
     }
+
+    static getDerivedStateFromProps(nextProps) {
+        return {
+            profiles: nextProps.profiles,
+        }
+    }
+
+
+    componentDidUpdate(_prevProps, _prevState, _snapshot) {
+        if (this.props.receiverId in this.props.profiles && this.props.profiles[this.props.receiverId] !== this.state.userProfile) {
+            this.setState({
+                userProfile: this.props.profiles[this.props.receiverId],
+            });
+        }
+    }
+
+    getDisplayName = () => this.state.userProfile.name !== "" ? this.state.userProfile.name : "Invibe user " + this.props.receiverId;
 
     goToProfile = () => {
         this.props.navigation.push("Profile", {userId: this.props.receiverId});
@@ -44,6 +48,7 @@ class ChatHeader extends Component {
     render() {
         const receiverProfileImageDimension = Dimensions.get('window').width / 7.5;
         const spaceBetween = Dimensions.get('window').width / 50;
+        const onPress = "onPress" in this.props ? this.props.onPress : this.goToProfile;
         return (
             <View style={{
                 flexDirection: "row",
@@ -52,32 +57,36 @@ class ChatHeader extends Component {
                 // borderColor:'red', borderWidth:1,
                 width: Dimensions.get('window').width / 1.4,
             }}>
-                <TouchableOpacity onPress={this.goToProfile}>
+                <TouchableWithoutFeedback onPress={onPress}>
                     <Text style={{
                         fontSize: 23,
                         marginRight: spaceBetween,
                         textAlignVertical: "center",
                         color: chatSelectedColour,
                         fontWeight: 'bold',
-                    }}>{this.state.receiverName} </Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={{
+                    }}>{this.getDisplayName()} </Text>
+                </TouchableWithoutFeedback>
+                <TouchableWithoutFeedback style={{
                     borderRadius: receiverProfileImageDimension,
                     backgroundColor: "black",
                     width: receiverProfileImageDimension,
                     height: receiverProfileImageDimension,
-                }} onPress={this.goToProfile}>
-                    <Image source={this.state.receiverProfileImage}
+                }} onPress={onPress}>
+                    <Image source={this.state.userProfile.profileImage}
                            style={{
                                width: receiverProfileImageDimension,
                                height: receiverProfileImageDimension,
                                borderRadius: receiverProfileImageDimension
                            }}
                            resizeMode={"cover"}/>
-                </TouchableOpacity>
+                </TouchableWithoutFeedback>
             </View>
         );
     }
 }
 
-export default ChatHeader;
+const mapStateToProps = state => ({
+    profiles: state.profile.profiles,
+});
+
+export default connect(mapStateToProps, {getProfile})(ChatHeader);

@@ -11,7 +11,7 @@ import {
 } from "./code/screens/exports";
 import {connect} from "react-redux";
 import {createStackNavigator} from "@react-navigation/stack";
-import {Text} from "react-native";
+import {Text, View} from "react-native";
 import {restoreToken, restoreUserId} from "./code/redux/actions/AuthAction";
 import {ActionSheetProvider} from "@expo/react-native-action-sheet";
 import ImagesViewerScreen from "./code/screens/ImagesViewerScreen";
@@ -31,10 +31,12 @@ class Main extends Component {
         if (this.props.isLoading) {
             // We haven't finished checking for the token yet
             return (
-                <Text style={{fontSize: 64}}
-                      textAlign={'center'}>
-                    Loading
-                </Text>);
+                <View style={{alignSelf: "stretch", paddingTop: "50%"}}>
+                    <Text style={{fontSize: 64, alignSelf: "center"}}>
+                        Loading
+                    </Text>
+                </View>
+            );
         }
         const Stack = createStackNavigator();
         return (

@@ -13,6 +13,7 @@ import {connect} from "react-redux";
 import {addChat, deleteChat, getChatsList} from "../redux/actions/ChatAction";
 import {chatColour, styles} from "../chat/styles/ChatsScreenStyles";
 import {connectActionSheet} from "@expo/react-native-action-sheet";
+import ChatHeader from "../chat/components/ChatHeader";
 
 
 class ChatsScreen extends Component {
@@ -110,9 +111,14 @@ class ChatsScreen extends Component {
                 onLongPress={() => this.openActionSheetDeleteChat(chatInfo)}
             >
                 <View style={styles.chatView}>
-                    <Text style={styles.chatViewText}>
-                        {"Chat with " + chatInfo.receiver}
-                    </Text>
+                    {/*<Text style={styles.chatViewText}>*/}
+                    {/*    {"Chat with " + chatInfo.receiver}*/}
+                    {/*</Text>*/}
+                    <ChatHeader receiverId={chatInfo.receiver}
+                                navigation={this.props.navigation}
+                                onPress={() => this.props.navigation.navigate('Chat', {receiverId: chatInfo.receiver})}
+                    />
+                    <View style={{paddingBottom: 10}}/>
                 </View>
             </TouchableWithoutFeedback>
         )));

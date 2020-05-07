@@ -5,7 +5,7 @@ import PROFILE_IMAGE_PLACEHOLDER from "../../../assets/profile-image-placeholder
 
 // TODO: Consider adding caching to this
 export const getProfile = (userId, withAlbumImages = false) => dispatch => {
-    console.log("Get profile");
+    console.log("GET CHAT FOR ", userId);
     let albumStatus = withAlbumImages ? profileStatus.LOADING : profileStatus.UNLOADED;
     dispatch({
         type: UPDATE_USER_PROFILE,
