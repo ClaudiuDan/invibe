@@ -46,6 +46,7 @@ class UserProfileChatApiView(APIView):
             "name": user_profile.name,
             "short_description": user_profile.short_description,
             "long_description": user_profile.long_description,
+            "gender": user_profile.gender,
             "album_images": album_images,
         }
 
@@ -86,6 +87,8 @@ class UserProfileChatApiView(APIView):
             user_profile.short_description = request.data.get("short_description")
         if "long_description" in request.data:
             user_profile.long_description = request.data.get("long_description")
+        if "gender" in request.data:
+            user_profile.gender = request.data.get("gender")
 
         if "delete_album_images" in request.data:
             for album_image in request.data.get("delete_album_images"):

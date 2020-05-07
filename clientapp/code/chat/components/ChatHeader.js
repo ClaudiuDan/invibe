@@ -14,12 +14,10 @@ class ChatHeader extends Component {
         this.state = {
             userProfile:  this.props.receiverId in this.props.profiles ? this.props.profiles[this.props.receiverId] : new UserProfile(this.props.receiverId)
         }
-        console.log(this.state.userProfile)
     }
 
     componentDidMount() {
         if ([profileStatus.UNLOADED, profileStatus.ERROR].includes(this.state.userProfile.status)) {
-            console.log(this.props.receiverId)
             this.props.getProfile(this.props.receiverId, false);
         }
     }

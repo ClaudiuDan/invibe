@@ -5,6 +5,11 @@ from django.utils.translation import gettext_lazy as _
 
 
 class UserProfile(models.Model):
+    GENDER_CHOICES = (
+        ('M', 'Male'),
+        ('F', 'Female'),
+    )
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
 
     name = models.CharField(_('Name'), max_length=50, default="")
@@ -16,6 +21,8 @@ class UserProfile(models.Model):
     profile_image = models.ImageField(_('Profile Image'), upload_to='profile/profile_image/')
 
     profile_image_extension = models.CharField(max_length=10)
+
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
 
     class Meta:
         db_table = 'user_profile'

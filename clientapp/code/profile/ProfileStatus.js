@@ -6,3 +6,8 @@ export const profileStatus = {
     SAVING: 4,
     SAVING_ERRORED: 5,
 };
+
+export const genders = {
+    "MALE": "M",
+    "FEMALE": "F",
+}

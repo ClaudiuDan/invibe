@@ -36,6 +36,11 @@ function profileReducer(state = {}, action) {
             if ("albumStatus" in action.payload) {
                 profile.albumStatus = action.payload.albumStatus;
             }
+
+            if ("gender" in action.payload) {
+                profile.gender = action.payload.gender;
+            }
+
             return {
                 ...state,
                 profiles: {...state.profiles, [userId]: profile.shallowCopy()}
