@@ -30,8 +30,7 @@ class UserProfileChatApiView(APIView):
         try:
             user_profile = UserProfile.objects.get(pk=user)
         except UserProfile.DoesNotExist:
-            print("Profile does not exist")
-            return Response("Profile does not exist for the user_id", status=status.HTTP_404_NOT_FOUND)
+            user_profile = UserProfile.objects.create(user=user)
 
         album_images = []
         if self.request.query_params.get('with_album_images', False) == 'true':
@@ -113,3 +112,23 @@ class UserProfileChatApiView(APIView):
                 ).save()
 
         return Response(status.HTTP_200_OK)
+
+
+class AlbumImagesApiView(APIView):
+    def get(self, request):
+        user = request.user
+
+        user_id = self.request.query_params.get('user_id', -1)
+        if user_id != -1:
+            user = User.objects.get(pk=user_id)
+
+        album_images = []
+        query = AlbumImage.objects.filter(user=user)
+        for image in query:
+            album_images.append({
+                "image": encode_image_field_to_base64(image.image),
+                "image_extension": image.image_extension,
+                "created_timestamp": image.created_timestamp,
+            })
+
+        return Response(json.dumps(album_images, cls=DjangoJSONEncoder), status=status.HTTP_200_OK)

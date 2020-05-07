@@ -1,65 +1,67 @@
 import React, {Component} from 'react';
-import {ActivityIndicator, Image, ScrollView, StyleSheet, TextInput, TouchableOpacity, View} from 'react-native';
-import {chatColour} from "../chat/styles/ChatsScreenStyles";
+import {ActivityIndicator, Image, ScrollView, Text, TextInput, TouchableOpacity, View} from 'react-native';
 import {Icon} from "react-native-elements";
 import ImagePickerView from "../profile/ImageCameraOrGalleryPickerForProfile";
 import {connectActionSheet} from "@expo/react-native-action-sheet";
+import {connect} from "react-redux";
 import PROFILE_IMAGE_PLACEHOLDER from "../../assets/profile-image-placeholder.png"
-import Axios from "axios";
 import {isObjectEmpty} from "../Utils/Utils";
+import {styles} from "../profile/ProfileScreenStyles";
+import {getProfile, getProfileAlbumImages, updateProfile, updateProfileStatus} from "../redux/actions/ProfileAction";
+import UserProfile from "../profile/UserProfile";
+import {profileStatus} from "../profile/ProfileStatus";
 
-// TODO: Refactor this such that the current user profile can be cached in redux
 class ProfileScreen extends Component {
 
     constructor(props) {
         super(props);
 
+        const userId = this.props.route.params.userId;
+        const userProfile = userId in this.props.profiles ? this.props.profiles[userId] : new UserProfile(userId);
+
         this.state = {
-            profileImageOpened: true,
+            userId: userId,
+            userProfile: userProfile,
+
+            name: userProfile.name,
+            shortDescription: userProfile.shortDescription,
+            longDescription: userProfile.longDescription,
+            profileImage: userProfile.profileImage,
+            albumImages: userProfile.albumImages,
+
             editMode: false,
-            profileImage: PROFILE_IMAGE_PLACEHOLDER,
-            albumImages: [],
-            name: "",
-            shortDescription: "",
-            longDescription: "",
             editModeChanges: {}, // Preparing the data to be send as a post http request
-            savingInProgress: false,
-            loadingProfile: true,
         };
     }
 
 
     componentDidMount() {
-        Axios
-            .get(`/profile/`, {params: {user_id: this.props.route.params.userId, with_album_images: true}})
-            .then(response => {
-                const parsedData = JSON.parse(response.data);
+        if ([profileStatus.UNLOADED, profileStatus.ERROR].includes(this.state.userProfile.status)) {
+            this.props.getProfile(this.state.userId, true);
+        } else if ([profileStatus.UNLOADED, profileStatus.ERROR].includes(this.state.userProfile.albumStatus)) {
+            this.props.getProfileAlbumImages(this.state.userId);
+        }
+    }
 
-                const profileImage = "profile_image" in parsedData ?
-                    {uri: `data:image/${parsedData.profile_image_extension};base64,${parsedData.profile_image}`} :
-                    PROFILE_IMAGE_PLACEHOLDER;
+    static getDerivedStateFromProps(nextProps) {
+        return {
+            profiles: nextProps.profiles,
+        }
+    }
 
-                const albumImages = parsedData.album_images.map(image => {
-                    return {
-                        uri: `data:image/${image.image_extension};base64,${image.image}`,
-                        createdTimestamp: image.created_timestamp,
-                    };
-                });
 
-                this.setState({
-                    name: parsedData.name,
-                    shortDescription: parsedData.short_description,
-                    longDescription: parsedData.long_description,
-                    profileImage: profileImage,
-                    albumImages: albumImages,
-                    loadingProfile: false,
-                });
-            })
-            .catch(error => {
-                console.log("Could not get user profile from server", this.props.route.params.userId, error);
-                console.log(error.content);
-                this.setState({loadingProfile: false}); //TODO: better error handling here
+    componentDidUpdate(_prevProps, _prevState, _snapshot) {
+        if (this.state.userId in this.props.profiles && this.props.profiles[this.state.userId] !== this.state.userProfile) {
+            const userProfile = this.props.profiles[this.state.userId];
+            this.setState({
+                userProfile: userProfile,
+                name: userProfile.name,
+                shortDescription: userProfile.shortDescription,
+                longDescription: userProfile.longDescription,
+                profileImage: userProfile.profileImage,
+                albumImages: userProfile.albumImages,
             });
+        }
     }
 
     editButtonPressed = () => this.setState({editMode: true, editModeChanges: {}});
@@ -67,21 +69,11 @@ class ProfileScreen extends Component {
     saveButtonPressed = () => {
 
         if (isObjectEmpty(this.state.editModeChanges)) {
-            this.setState({editMode: false, editModeChanges: {}, savingInProgress: false});
+            this.setState({editMode: false, editModeChanges: {}});
             return;
         }
 
-        this.setState({savingInProgress: true});
-
-        Axios
-            .post(`/profile/`, this.state.editModeChanges)
-            .then(_ => {
-                this.setState({editMode: false, editModeChanges: {}, savingInProgress: false});
-            }).catch(error => {
-            console.log("Could not save the profile changes", error);
-            this.setState({editMode: false, editModeChanges: {}, savingInProgress: false});
-        });
-
+        this.props.updateProfile(this.state.userId, this.state.editModeChanges, this.state);
     };
 
     onNameTextChanged = (text) => {
@@ -102,7 +94,7 @@ class ProfileScreen extends Component {
     });
 
     getEditProfileButton = () => {
-        if (this.state.savingInProgress) {
+        if (this.state.userProfile.status === profileStatus.SAVING) {
             return (
                 <View style={styles.editButton}>
                     <ActivityIndicator size="large" color={"#bababa"}/>
@@ -237,11 +229,72 @@ class ProfileScreen extends Component {
         );
     };
 
+    getAlbumImagesComponent() {
+        if (this.state.userProfile.albumStatus === profileStatus.LOADING) {
+            return (
+                <ActivityIndicator style={{alignSelf: "center"}} size="large" color={"#bababa"}/>
+            )
+        }
+        if ([profileStatus.ERROR, profileStatus.UNLOADED].includes(this.state.userProfile.albumStatus)) {
+            return (<View style={{alignSelf: "center"}}>
+                <Text> Couldn't load the album, please try again</Text>
+                <View style={{paddingTop: "3%", alignItems: "center"}}>
+                    <Icon
+                        reverse
+                        style={{alignSelf: "center"}}
+                        name='refresh-cw'
+                        type='feather'
+                        size={20}
+                        color={"#bababa"}
+                        onPress={() => this.props.getProfileAlbumImages(this.state.userId)}
+                    />
+                </View>
+            </View>);
+        }
+
+        return (<>
+            <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
+                {this.state.albumImages.map((img, index) => (
+                    <TouchableOpacity key={index}
+                                      activeOpacity={1}
+                                      style={styles.mediaImageContainer}
+                                      onPress={() => this.props.navigation.navigate('ImagesViewer', {
+                                          images: this.state.albumImages,
+                                          imageIndex: index
+                                      })}
+                                      onLongPress={() => this.openDeleteAlbumImage(index)}
+                    >
+                        <Image
+                            source={{uri: img.uri}}
+                            style={styles.image} resizeMode="cover"/>
+                    </TouchableOpacity>
+                ))}
+            </ScrollView>
+            {this.getAddAlbumImageButton()}
+        </>);
+    }
+
     render() {
 
-        if (this.state.loadingProfile) {
+        if (this.state.userProfile.status === profileStatus.LOADING) {
             return (
                 <ActivityIndicator style={{paddingTop: "50%", alignSelf: "center"}} size="large" color={"#bababa"}/>
+            )
+        }
+
+        if ([profileStatus.ERROR, profileStatus.UNLOADED].includes(this.state.userProfile.status)) {
+            return (
+                <View style={{paddingTop: "50%", alignSelf: "center"}}>
+                    <Text> Couldn't load profile, please try again</Text>
+                    <Icon
+                        reverse
+                        name='refresh-cw'
+                        type='feather'
+                        size={20}
+                        color={"#bababa"}
+                        onPress={() => this.props.getProfileAlbumImages(this.state.userId)}
+                    />
+                </View>
             )
         }
 
@@ -254,70 +307,59 @@ class ProfileScreen extends Component {
         };
 
         return (<ScrollView>
-                <View style={styles.container}>
-                    <View style={styles.header}/>
-                    {this.getEditProfileButton()}
-                    <TouchableOpacity style={styles.avatar}
-                                      onPress={() => this.props.navigation.push('ImagesViewer', {
-                                          images: [this.state.profileImage],
-                                          imageIndex: 0
-                                      })}
-                                      onLongPress={this.openDeleteProfileImage}
-                    >
-                        <Image
-                            source={this.state.profileImage}
-                            style={styles.avatarImage}
-                            resizeMode={"cover"}
-                        />
-                    </TouchableOpacity>
-                    {this.getEditProfileImageButton()}
-                    <View style={styles.body}>
-                        <View style={styles.bodyContent}>
-                            <TextInput maxLength={40} style={[styles.name, textInputEditModeStyle]}
-                                       editable={this.state.editMode} value={this.state.name}
-                                       ref={input => {
-                                           this.nameTextInput = input
-                                       }}
-                                       placeholder={"Name"}
-                                       onChangeText={this.onNameTextChanged}/>
-                            <TextInput maxLength={70} style={[styles.info, textInputEditModeStyle]}
-                                       editable={this.state.editMode} value={this.state.shortDescription}
-                                       ref={input => {
-                                           this.shortDescriptionTextInput = input
-                                       }}
-                                       placeholder={"Short description"}
-                                       onChangeText={this.onShortDescriptionTextChanged}/>
-                            <TextInput style={[styles.description, textInputEditModeStyle]}
-                                       multiline={true}
-                                       editable={this.state.editMode}
-                                       maxLength={250}
-                                       value={this.state.longDescription}
-                                       ref={input => {
-                                           this.longDescriptionTextInput = input
-                                       }}
-                                       placeholder={"Long description"}
-                                       onChangeText={this.onLongDescriptionTextChanged}/>
+                <View style={styles.header}/>
+                {this.getEditProfileButton()}
+                <TouchableOpacity style={styles.avatar}
+                                  onPress={() => this.props.navigation.push('ImagesViewer', {
+                                      images: [this.state.profileImage],
+                                      imageIndex: 0
+                                  })}
+                                  onLongPress={this.openDeleteProfileImage}
+                >
+                    <Image
+                        source={this.state.profileImage}
+                        style={styles.avatarImage}
+                        resizeMode={"cover"}
+                    />
+                </TouchableOpacity>
+                {this.getEditProfileImageButton()}
+                <View style={styles.body}>
+                    <View style={styles.bodyContent}>
+                        <TextInput maxLength={40} style={[styles.name, textInputEditModeStyle]}
+                                   editable={this.state.editMode} value={this.state.name}
+                                   ref={input => {
+                                       this.nameTextInput = input
+                                   }}
+                                   placeholder={"Name"}
+                                   onChangeText={this.onNameTextChanged}/>
+                        <TextInput maxLength={70} style={[styles.info, textInputEditModeStyle]}
+                                   editable={this.state.editMode} value={this.state.shortDescription}
+                                   ref={input => {
+                                       this.shortDescriptionTextInput = input
+                                   }}
+                                   placeholder={"Short description"}
+                                   onChangeText={this.onShortDescriptionTextChanged}/>
+                        <TextInput style={[styles.description, textInputEditModeStyle]}
+                                   multiline={true}
+                                   editable={this.state.editMode}
+                                   maxLength={250}
+                                   value={this.state.longDescription}
+                                   ref={input => {
+                                       this.longDescriptionTextInput = input
+                                   }}
+                                   placeholder={"Long description"}
+                                   onChangeText={this.onLongDescriptionTextChanged}/>
 
-                            <View style={{marginTop: 32, marginBottom: 20}}>
-                                <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
-                                    {this.state.albumImages.map((img, index) => (
-                                        <TouchableOpacity key={index}
-                                                          activeOpacity={1}
-                                                          style={styles.mediaImageContainer}
-                                                          onPress={() => this.props.navigation.navigate('ImagesViewer', {
-                                                              images: this.state.albumImages,
-                                                              imageIndex: index
-                                                          })}
-                                                          onLongPress={() => this.openDeleteAlbumImage(index)}
-                                        >
-                                            <Image
-                                                source={{uri: img.uri}}
-                                                style={styles.image} resizeMode="cover"/>
-                                        </TouchableOpacity>
-                                    ))}
-                                </ScrollView>
-                                {this.getAddAlbumImageButton()}
-                            </View>
+                        <View style={{marginTop: "7%", alignSelf: "stretch"}}>
+                            <View
+                                style={{
+                                    alignSelf: "stretch",
+                                    borderBottomColor: 'black',
+                                    borderBottomWidth: 0.5,
+                                    marginBottom: "5%",
+                                }}
+                            />
+                            {this.getAlbumImagesComponent()}
                         </View>
                     </View>
                 </View>
@@ -327,96 +369,14 @@ class ProfileScreen extends Component {
     }
 }
 
-export default connectActionSheet(ProfileScreen);
-
-const styles = StyleSheet.create({
-    header: {
-        backgroundColor: chatColour,
-        height: 170,
-    },
-    editButton: {
-        position: 'absolute',
-        alignSelf: 'flex-end',
-        marginRight: "5%",
-        marginTop: "5%",
-    },
-    editProfileImageButton: {
-        position: 'absolute',
-        alignSelf: 'flex-end',
-        marginRight: "40%",
-        marginTop: "48%",
-    },
-    addAlbumImageButton: {
-        position: 'absolute',
-        alignSelf: 'flex-start',
-        marginTop: "-5%",
-        marginLeft: "-7%",
-    },
-    avatar: {
-        width: 165,
-        height: 170,
-        borderRadius: 70,
-        marginBottom: 10,
-        alignSelf: 'center',
-        position: 'absolute',
-        marginTop: '12%'
-    },
-    body: {
-        marginTop: 40,
-    },
-    bodyContent: {
-        flex: 1,
-        alignItems: 'center',
-        padding: 30,
-    },
-    name: {
-        fontSize: 28,
-        color: "#696969",
-        fontWeight: "600",
-        minHeight: "15%",
-    },
-    info: {
-        fontSize: 16,
-        color: "#00BFFF",
-        marginTop: 10
-    },
-    description: {
-        fontSize: 16,
-        color: "#696969",
-        marginTop: 10,
-        textAlign: 'center'
-    },
-    image: {
-        height: '100%',
-        width: '100%',
-        borderWidth: 3,
-        borderRadius: 30,
-    },
-    avatarImage: {
-        height: '100%',
-        width: '100%',
-        borderRadius: 70,
-        borderWidth: 3,
-        borderColor: "white",
-    },
-    mediaImageContainer: {
-        width: 180,
-        height: 200,
-        borderRadius: 12,
-        overflow: "hidden",
-        marginHorizontal: 10,
-        alignContent: "center"
-    },
-    buttonContainer: {
-        marginTop: 10,
-        height: 45,
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 20,
-        width: 250,
-        borderRadius: 30,
-        backgroundColor: "#00BFFF",
-    },
+const mapStateToProps = state => ({
+    profiles: state.profile.profiles,
 });
+
+export default connect(mapStateToProps, {
+    getProfile,
+    getProfileAlbumImages,
+    updateProfile,
+    updateProfileStatus
+})(connectActionSheet(ProfileScreen));
 
