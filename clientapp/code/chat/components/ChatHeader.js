@@ -52,7 +52,6 @@ class ChatHeader extends Component {
                 flexDirection: "row",
                 alignItems: 'center',
                 justifyContent: "flex-end",
-                // borderColor:'red', borderWidth:1,
                 width: Dimensions.get('window').width / 1.4,
             }}>
                 <TouchableWithoutFeedback onPress={onPress}>
