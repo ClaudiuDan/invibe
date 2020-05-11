@@ -9,6 +9,8 @@ export default class UserProfile {
                 profileImage = PROFILE_IMAGE_PLACEHOLDER,
                 albumImages = [],
                 gender = "F",
+                longitude = 0,
+                latitude = 0,
                 status = profileStatus.UNLOADED,
                 albumStatus = profileStatus.UNLOADED) {
 
@@ -21,9 +23,22 @@ export default class UserProfile {
         this._status = status;
         this._albumStatus = albumStatus;
         this._gender = gender;
+        this._longitude = longitude;
+        this._latitude = latitude;
     }
+
     shallowCopy() {
-        return new UserProfile(this.userId, this.name, this.shortDescription, this.longDescription, this.profileImage, this.albumImages, this.gender, this.status, this.albumStatus);
+        return new UserProfile(this.userId,
+            this.name,
+            this.shortDescription,
+            this.longDescription,
+            this.profileImage,
+            this.albumImages,
+            this.gender,
+            this.longitude,
+            this.latitude,
+            this.status,
+            this.albumStatus);
     }
 
     // Getters and setters
@@ -51,10 +66,10 @@ export default class UserProfile {
         return this._profileImage;
     }
 
-
     get gender() {
         return this._gender;
     }
+
 
     get albumImages() {
         return this._albumImages;
@@ -91,12 +106,29 @@ export default class UserProfile {
     set status(value) {
         this._status = value;
     }
+
     set albumStatus(value) {
         this._albumStatus = value;
     }
 
     set gender(value) {
         this._gender = value;
+    }
+
+    get longitude() {
+        return this._longitude;
+    }
+
+    set longitude(value) {
+        this._longitude = value;
+    }
+
+    get latitude() {
+        return this._latitude;
+    }
+
+    set latitude(value) {
+        this._latitude = value;
     }
 
 }

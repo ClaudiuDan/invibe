@@ -35,16 +35,26 @@ class SettingsScreen extends Component {
     getLocationAfterPermissionGranted = () => {
         Location.getCurrentPositionAsync({}).then(r => {
             Location.reverseGeocodeAsync({latitude: r.coords.latitude, longitude: r.coords.longitude})
-                .then(location => this.setState({
-                    locationRetrieved: true,
-                    location: {
-                        city: location[0].city,
-                        country: location[0].country,
-                        street: location[0].street,
-                        latitude: r.coords.latitude,
+                .then(location => {
+                    this.setState({
+                        locationRetrieved: true,
+                        location: {
+                            city: location[0].city,
+                            country: location[0].country,
+                            street: location[0].street,
+                            latitude: r.coords.latitude,
+                            longitude: r.coords.longitude,
+                        }
+                    })
+                    
+                    this.props.updateProfile(this.props.userId, {
                         longitude: r.coords.longitude,
-                    }
-                }))
+                        latitude: r.coords.latitude
+                    }, {
+                        longitude: r.coords.longitude,
+                        latitude: r.coords.latitude
+                    });
+                })
                 .catch(error => console.log("Couldn't reverse geocode", error))
         }).catch(error => console.log("Couldn't get current position", error))
     }

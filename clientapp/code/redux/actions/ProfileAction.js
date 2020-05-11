@@ -42,6 +42,8 @@ export const getProfile = (userId, withAlbumImages = false) => dispatch => {
                     shortDescription: parsedData.short_description,
                     longDescription: parsedData.long_description,
                     gender: parsedData.gender,
+                    latitude: parsedData.latitude,
+                    longitude: parsedData.longitude,
                     profileImage: profileImage,
                     albumImages: albumImages,
                     albumStatus: albumStatus,

@@ -24,6 +24,10 @@ class UserProfile(models.Model):
 
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
 
+    longitude = models.DecimalField(max_digits=9, decimal_places=6)
+
+    latitude = models.DecimalField(max_digits=9, decimal_places=6)
+
     class Meta:
         db_table = 'user_profile'
 

@@ -41,6 +41,14 @@ function profileReducer(state = {}, action) {
                 profile.gender = action.payload.gender;
             }
 
+            if ("longitude" in action.payload) {
+                profile.longitude = action.payload.longitude;
+            }
+
+            if ("latitude" in action.payload) {
+                profile.latitude = action.payload.latitude;
+            }
+
             return {
                 ...state,
                 profiles: {...state.profiles, [userId]: profile.shallowCopy()}

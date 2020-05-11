@@ -47,6 +47,8 @@ class UserProfileChatApiView(APIView):
             "short_description": user_profile.short_description,
             "long_description": user_profile.long_description,
             "gender": user_profile.gender,
+            "longitude": user_profile.longitude,
+            "latitude": user_profile.latitude,
             "album_images": album_images,
         }
 
@@ -89,6 +91,10 @@ class UserProfileChatApiView(APIView):
             user_profile.long_description = request.data.get("long_description")
         if "gender" in request.data:
             user_profile.gender = request.data.get("gender")
+        if "longitude" in request.data:
+            user_profile.longitude = request.data.get("longitude")
+        if "latitude" in request.data:
+            user_profile.latitude = request.data.get("latitude")
 
         if "delete_album_images" in request.data:
             for album_image in request.data.get("delete_album_images"):
