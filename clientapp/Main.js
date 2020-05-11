@@ -16,6 +16,7 @@ import {restoreToken, restoreUserId} from "./code/redux/actions/AuthAction";
 import {ActionSheetProvider} from "@expo/react-native-action-sheet";
 import ImagesViewerScreen from "./code/screens/ImagesViewerScreen";
 import ChatHeader from "./code/chat/components/ChatHeader";
+import DiscoverScreen from "./code/screens/DiscoverScreen";
 
 
 class Main extends Component {
@@ -64,6 +65,10 @@ class Main extends Component {
                                                                                     navigation={navigation}/>,
                                               })}/>
                                 <Stack.Screen name="Settings" component={SettingsScreen}/>
+                                <Stack.Screen name="Discover" component={DiscoverScreen}
+                                              options={() => ({
+                                                  headerShown: false,
+                                              })}/>
                                 <Stack.Screen name="ImagesViewer" component={ImagesViewerScreen}
                                               options={() => ({
                                                   headerShown: false,

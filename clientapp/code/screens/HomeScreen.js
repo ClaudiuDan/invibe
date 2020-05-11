@@ -24,16 +24,20 @@ class HomeScreen extends Component {
         return (
             <View>
                 <Button
-                    title="Go to Profile"
+                    title="Profile"
                     onPress={() => this.props.navigation.navigate('Profile',  {userId: this.props.userId, editable: true})}
                 />
                 <Button
-                    title="Go to Settings"
-                    onPress={() => this.props.navigation.navigate('Settings')}
+                    title="Chats"
+                    onPress={() => this.props.navigation.navigate('Chats')}
                 />
                 <Button
-                    title="Go to Chats"
-                    onPress={() => this.props.navigation.navigate('Chats')}
+                    title="Discover"
+                    onPress={() => this.props.navigation.navigate('Discover')}
+                />
+                <Button
+                    title="Settings"
+                    onPress={() => this.props.navigation.navigate('Settings')}
                 />
             </View>
         );
