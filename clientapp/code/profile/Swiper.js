@@ -4,8 +4,8 @@ import {Card} from 'react-native-elements';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const SCREEN_HEIGHT = Dimensions.get('window').height;
-const SWIPE_THRESHOLD = 0.35 * SCREEN_WIDTH;
-const SWIPE_OUT_DURATION = 500;
+const SWIPE_THRESHOLD = 0.25 * SCREEN_WIDTH;
+const SWIPE_OUT_DURATION = 250;
 
 class Swiper extends Component {
 
@@ -36,7 +36,7 @@ class Swiper extends Component {
     componentDidUpdate(prevProps, prevState, snapshot) {
         if (prevProps.data !== this.props.data) {
             this.setState({
-                index: 0
+                index: this.state.index - this.props.savedIndex,
             })
         }
     }
@@ -50,7 +50,7 @@ class Swiper extends Component {
     forceSwipe = (direction) => {
         const x = direction === 'right' ? SCREEN_WIDTH * 2 : -SCREEN_WIDTH * 2;
         Animated.timing(this.position, {
-            toValue: {x, y: 0},
+            toValue: {x: x, y: 0},
             duration: SWIPE_OUT_DURATION
         }).start(() => this.onSwipeComplete(direction));
     }
@@ -61,6 +61,9 @@ class Swiper extends Component {
 
         direction === 'right' ? onSwipeRight(item) : onSwipeLeft(item);
         this.position.setValue({x: 0, y: 0});
+        if (this.state.index >= this.props.data.length - 3) {
+            this.props.approachingEndOfList(this.state.index + 1);
+        }
         this.setState({index: this.state.index + 1});
     }
 

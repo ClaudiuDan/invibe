@@ -7,7 +7,9 @@ from rest_framework.views import APIView
 from inv_user.models import User
 from chat.models import encode_image_field_to_base64
 import base64
+import random
 from django.core.files.base import ContentFile
+from django.db.models import Q
 
 from .models import UserProfile, AlbumImage
 
@@ -17,7 +19,43 @@ from rest_framework.response import Response
 import json
 
 
-class UserProfileChatApiView(APIView):
+def user_profile_to_dictionary_object(user_profile):
+    response = {
+        "userId": user_profile.pk,
+        "name": user_profile.name,
+        "short_description": user_profile.short_description,
+        "long_description": user_profile.long_description,
+        "gender": user_profile.gender,
+        "longitude": user_profile.longitude,
+        "latitude": user_profile.latitude,
+    }
+
+    if user_profile.profile_image:
+        response["profile_image"] = encode_image_field_to_base64(user_profile.profile_image)
+        response["profile_image_extension"] = user_profile.profile_image_extension
+
+    return response
+
+
+class DiscoverUserProfilesApiView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # This is a simplified version of the discover profiles API
+
+        try:
+            user_profiles = random.sample(list(UserProfile.objects.filter(~Q(pk=request.user))), 5)
+        except ValueError:
+            return Response("Not enough user profiles", status=status.HTTP_404_NOT_FOUND)
+
+        response = list(map(user_profile_to_dictionary_object, user_profiles))
+
+        print(response)
+
+        return Response(json.dumps(response, cls=DjangoJSONEncoder), status=status.HTTP_200_OK)
+
+
+class UserProfileApiView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -42,19 +80,8 @@ class UserProfileChatApiView(APIView):
                     "created_timestamp": image.created_timestamp,
                 })
 
-        response = {
-            "name": user_profile.name,
-            "short_description": user_profile.short_description,
-            "long_description": user_profile.long_description,
-            "gender": user_profile.gender,
-            "longitude": user_profile.longitude,
-            "latitude": user_profile.latitude,
-            "album_images": album_images,
-        }
-
-        if user_profile.profile_image:
-            response["profile_image"] = encode_image_field_to_base64(user_profile.profile_image)
-            response["profile_image_extension"] = user_profile.profile_image_extension
+        response = user_profile_to_dictionary_object(user_profile)
+        response["album_images"] = album_images
 
         return Response(json.dumps(response, cls=DjangoJSONEncoder), status=status.HTTP_200_OK)
 
