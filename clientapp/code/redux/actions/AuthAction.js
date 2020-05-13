@@ -80,6 +80,7 @@ export const socialConnect = (token) => dispatch => {
 };
 
 export const signOut = () => dispatch => {
+    //TODO: remove data stored in cache
     Axios.get(`/auth/logout/`).catch(error => console.log(error));
 
     delete Axios.defaults.headers.common.Authorization;

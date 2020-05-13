@@ -301,7 +301,7 @@ class ProfileScreen extends Component {
                         type='feather'
                         size={20}
                         color={"#bababa"}
-                        onPress={() => this.props.getProfileAlbumImages(this.state.userId)}
+                        onPress={() => this.props.getProfile(this.state.userId, true)}
                     />
                 </View>
             )

@@ -68,7 +68,7 @@ class UserProfileApiView(APIView):
         try:
             user_profile = UserProfile.objects.get(pk=user)
         except UserProfile.DoesNotExist:
-            user_profile = UserProfile.objects.create(user=user)
+            user_profile = UserProfile.objects.create(user=user, longitude=0.0, latitude=0.0)
 
         album_images = []
         if self.request.query_params.get('with_album_images', False) == 'true':
@@ -89,7 +89,7 @@ class UserProfileApiView(APIView):
         try:
             user_profile = UserProfile.objects.get(pk=request.user)
         except UserProfile.DoesNotExist:
-            user_profile = UserProfile.objects.create(user=request.user)
+            user_profile = UserProfile.objects.create(user=request.user, longitude=0.0, latitude=0.0)
 
         try:
             if request.data.get("delete_profile_image", False):

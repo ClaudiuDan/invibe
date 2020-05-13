@@ -175,6 +175,7 @@ export const openWebSocketForChat = () => dispatch => {
     ws.onopen = () => {
         const handshake = {
             type: 'handshake',
+            // TODO: Check if token exists(Error on sign out)
             token: Axios.defaults.headers.common.Authorization.split(' ')[1],
         };
 
