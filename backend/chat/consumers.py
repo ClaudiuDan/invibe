@@ -5,7 +5,6 @@ from django.core.serializers.json import DjangoJSONEncoder
 
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
-from django.utils import timezone
 from django.db.models import Q
 from django.db import IntegrityError
 from inv_user.models import User

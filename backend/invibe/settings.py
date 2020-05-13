@@ -45,6 +45,8 @@ INSTALLED_APPS = [
     'inv_user',
     'chat',
     'user_profile',
+    'matches',
+
     'rest_framework',
     'rest_framework.authtoken',
     'rest_auth.registration',

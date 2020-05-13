@@ -31,6 +31,7 @@ class DiscoverScreen extends Component {
     }
 
     componentDidMount() {
+        // TODO: Move this http requests to redux so that profile information is not immediately lost.
         Axios
             .get(`/profile/discover_profiles/`)
             .then(response => {

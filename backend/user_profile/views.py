@@ -147,7 +147,7 @@ class UserProfileApiView(APIView):
                     created_timestamp=album_image["created_timestamp"],
                 ).save()
 
-        return Response(status.HTTP_200_OK)
+        return Response(status=status.HTTP_200_OK)
 
 
 class AlbumImagesApiView(APIView):

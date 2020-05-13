@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {Animated, Dimensions, Image, PanResponder, ScrollView, Text, View} from 'react-native';
+import {Animated, Dimensions, Image, PanResponder, Text, View} from 'react-native';
 import {Card} from 'react-native-elements';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -7,6 +7,7 @@ const SCREEN_HEIGHT = Dimensions.get('window').height;
 const SWIPE_THRESHOLD = 0.25 * SCREEN_WIDTH;
 const SWIPE_OUT_DURATION = 250;
 
+// TODO: Consider optimising this by not rendering all the cards and only the ones visible to the user (FlatList might offer such a functionality)
 class Swiper extends Component {
 
     constructor(props) {
