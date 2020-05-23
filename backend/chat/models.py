@@ -22,16 +22,19 @@ class MessageTypes(Enum):
 
 
 class Message(models.Model):
-    created_timestamp = models.BigIntegerField()
+#     TODO: change default
+    created_timestamp = models.BigIntegerField(default=None)
     server_received_datetime = models.DateTimeField(_('message was received by server at date time'),
                                                     default=timezone.now)
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='message_sender')
     receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='message_receiver')
     is_seen = models.BooleanField(_('Was Message Seen'),
                                   default=False)
+#     TODO: change default
     message_type = models.CharField(
         max_length=30,
-        choices=[(member.value, member.value) for member in MessageTypes]
+        choices=[(member.value, member.value) for member in MessageTypes],
+        default=None
     )
 
     def __str__(self):
