@@ -15,14 +15,13 @@ from .models import Message, Chat, TextMessage, MessageTypes, ImageMessage, deco
 
 
 class ChatConsumer(WebsocketConsumer):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+#         async_to_sync(self.channel_layer.group_add)('match_updates_group', self.channel_name)
         self.receiver = ""
 
     def receive(self, text_data=None, bytes_data=None):
         data = json.loads(text_data)
-
         if data['type'] == 'handshake':
             self.scope['user'] = Token.objects.get(key=data['token']).user
             self._handshake()
@@ -58,7 +57,9 @@ class ChatConsumer(WebsocketConsumer):
         elif data['type'] == '__ping__':
             self.send(json.dumps({'type': '__pong__'}))
 
+
     def new_message(self, message):
+        print ("\n \n in new message ", message['text'], "\n\n")
         self.send(message['text'])
 
     def messages_read(self, message):
@@ -156,4 +157,5 @@ class ChatConsumer(WebsocketConsumer):
         self.send(json.dumps(resp, cls=DjangoJSONEncoder))
 
     def disconnect(self, close_code):
+        print ("\n in disconnect func\n")
         async_to_sync(self.channel_layer.group_discard)(str(self.scope["user"].pk), self.channel_name)

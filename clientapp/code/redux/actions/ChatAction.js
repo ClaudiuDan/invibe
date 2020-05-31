@@ -201,9 +201,11 @@ export const openWebSocketForChat = () => dispatch => {
                     message: new_message,
                 }
             });
-
+        } else if (messageData.type === 'new_match') {
+            console.log("you have a new match")
         } else if (messageData.type === 'new_message') {
             new_message = messageFromServerData('left', messageData);
+            // console.log(new_message.text);
             dispatch({
                 type: ADD_MESSAGE,
                 payload: {

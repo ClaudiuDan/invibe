@@ -72,12 +72,24 @@ class DiscoverScreen extends Component {
     handleRight = (item) => {
         // this.props.ws.send(JSON.stringify({'type': '__ping__'}));
         this.send_swipe({userId: item.userId, type: 'like'});
+        console.log(this.get_matches());
         console.log("Liked", item.userId);
     }
 
     handleLeft = (item) => {
         this.send_swipe({userId: item.userId, type: 'pass'});
         console.log("Passed", item.userId);
+    }
+
+    get_matches = () => {
+        Axios
+            .get(`/matches/`)
+            .then(response => {
+                console.log(response.data);
+            })
+            .catch(error => {
+                console.log("Could not get user matches", error);
+            });
     }
 
     send_swipe = (swipe_info) => {
