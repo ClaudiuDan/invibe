@@ -1,10 +1,8 @@
 import Axios from "axios";
 import {ADD_CHAT, ADD_MESSAGE, SET_CHAT, SET_CHATSLIST, UPDATE_MESSAGE} from "../actions/Types";
 import {
-    ADD_WEBSOCKET_CONNECTION,
     DELETE_CHAT,
     MESSAGES_READ,
-    RETRY_MESSAGES,
     SET_CHAT_INFO_LOADING_STATUS
 } from "./Types";
 import ChatInfo, {ChatInfoStatus} from "../../chat/classes/ChatInfo";
@@ -167,92 +165,50 @@ export const addMessage = (message) => dispatch => {
     });
 };
 
-export const openWebSocketForChat = () => dispatch => {
-    const ws = new WebSocket(WebSocketURL);
-    console.log("Opening websocket connection.");
-    let closeConnection = setTimeout(() => ws.close(), 5000);
-
-    ws.onopen = () => {
-        const handshake = {
-            type: 'handshake',
-            // TODO: Check if token exists(Error on sign out)
-            token: Axios.defaults.headers.common.Authorization.split(' ')[1],
-        };
-
-        ws.send(JSON.stringify(handshake));
-
-        setTimeout(() => {
-            ws.send(JSON.stringify({'type': '__ping__'}));
-        }, 500);
-
-        dispatch({
-            type: RETRY_MESSAGES,
-        })
-    };
-
-    ws.onmessage = (message) => {
-        const messageData = JSON.parse(message.data);
-        let new_message = {};
-        if (messageData.type === 'message_echo') {
-            new_message = messageFromServerData('right', messageData);
-            dispatch({
-                type: UPDATE_MESSAGE,
-                payload: {
-                    message: new_message,
-                }
-            });
-        } else if (messageData.type === 'new_match') {
-            console.log("you have a new match")
-        } else if (messageData.type === 'new_message') {
-            new_message = messageFromServerData('left', messageData);
-            // console.log(new_message.text);
-            dispatch({
-                type: ADD_MESSAGE,
-                payload: {
-                    message: new_message,
-                }
-            });
-
-        } else if (messageData.type === 'messages_read') {
-            dispatch({
-                type: MESSAGES_READ,
-                payload: {
-                    receiver: messageData.receiver,
-                    up_to_created_timestamp: messageData.up_to_created_timestamp,
-                    direction: "right"
-                }
-            })
-        } else if (messageData.type === 'messages_read_echo') {
-            dispatch({
-                type: MESSAGES_READ,
-                payload: {
-                    receiver: messageData.receiver,
-                    up_to_created_timestamp: messageData.up_to_created_timestamp,
-                    direction: "left"
-                }
-            })
-        } else if (messageData.type === '__pong__') {
-            clearTimeout(closeConnection);
-            setTimeout(() => {
-                ws.send(JSON.stringify({'type': '__ping__'}));
-            }, 2500);
-            closeConnection = setTimeout(() => ws.close(), 5000);
-        }
-
-    };
-
-    ws.onclose = (reason) => {
-        console.log("onclose");
-        setTimeout(() => dispatch(openWebSocketForChat()), 1000);
-    };
-
-    dispatch({
-        type: ADD_WEBSOCKET_CONNECTION,
+export const messageEcho = (messageData) => {
+    let new_message
+    new_message = messageFromServerData('right', messageData);
+    return {
+        type: UPDATE_MESSAGE,
         payload: {
-            ws: ws
+            message: new_message,
         }
-    })
+    };
 };
+
+export const newMessage = (messageData) => {
+    let new_message
+    new_message = messageFromServerData('left', messageData);
+    return {
+        type: ADD_MESSAGE,
+        payload: {
+            message: new_message,
+        }
+    };
+};
+
+export const messagesRead = (messageData) => {
+    return {
+        type: MESSAGES_READ,
+        payload: {
+            receiver: messageData.receiver,
+            up_to_created_timestamp: messageData.up_to_created_timestamp,
+            direction: "right"
+        }
+    };
+};
+
+export const messagesReadEcho = (messageData) => {
+    return {
+        type: MESSAGES_READ,
+        payload: {
+            receiver: messageData.receiver,
+            up_to_created_timestamp: messageData.up_to_created_timestamp,
+            direction: "left"
+        }
+    };
+};
+
 
 export const retrieveImages = (chatInfo) => dispatch => {
     // TODO: retrieve images in reversed order.

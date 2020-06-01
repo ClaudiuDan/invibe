@@ -21,10 +21,6 @@ class MatchesApiView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-#         matches = request.user.user_matched_by.filter(match_status='L',
-#                                                       user_action_maker__in=request.user.user_matched.filter(
-#                                                           match_status='L').values('user_action_receiver')) \
-#             .values('user_action_maker')
         matches1 = request.user.user_matched_1.all().values('user_2')
         matches2 = request.user.user_matched_2.all().values('user_1')
         response = []
@@ -54,6 +50,10 @@ class MatchesApiView(APIView):
             try:
                 Match.objects.create(user_1=request.user, user_2=user_action_receiver)
                 async_to_sync(channel_layer.group_send)(str(request.user.pk), {
+                    'type': 'new.message',
+                    'text': json.dumps({'type':'new_match', 'text':'ai facut match fraere'})
+                })
+                async_to_sync(channel_layer.group_send)(str(user_action_receiver.pk), {
                     'type': 'new.message',
                     'text': json.dumps({'type':'new_match', 'text':'ai facut match fraere'})
                 })
