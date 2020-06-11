@@ -176,6 +176,7 @@ function chatReducer(state = {}, action) {
                 chatsList: new ChatsList({...chatsInfo})
             };
 
+            // TODO: separate this as well
         case ADD_WEBSOCKET_CONNECTION:
 
             return {

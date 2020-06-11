@@ -1,6 +1,7 @@
 import Axios from "axios";
 import {ADD_WEBSOCKET_CONNECTION, RETRY_MESSAGES} from "./Types";
 import {newMessage, messagesRead, messagesReadEcho, messageEcho} from "./ChatAction";
+import {addMatch} from "./MatchAction";
 
 const WebSocketURL = 'wss://invibes.herokuapp.com/chat/';
 export const openWebSocket = () => dispatch => {
@@ -24,8 +25,7 @@ export const openWebSocket = () => dispatch => {
             type: RETRY_MESSAGES,
         })
     };
-
-    addHandlersToWebSocket(ws);
+    dispatch(addHandlersToWebSocket(ws));
 
     ws.onclose = (reason) => {
         console.log("onclose");
@@ -49,7 +49,8 @@ const addHandlersToWebSocket = (ws) => dispatch => {
             dispatch(messageEcho(messageData))
 
         } else if (messageData.type === 'new_match') {
-            console.log("you have a new match")
+            console.log (messageData, ' new_match');
+            dispatch(addMatch(messageData.matched_with))
 
         } else if (messageData.type === 'new_message') {
             dispatch(newMessage(messageData))

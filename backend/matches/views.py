@@ -48,14 +48,15 @@ class MatchesApiView(APIView):
 
         if self.check_match(request.user, user_action_receiver) == True:
             try:
+                print ("in check match ", request.user.pk, user_action_receiver.pk)
                 Match.objects.create(user_1=request.user, user_2=user_action_receiver)
                 async_to_sync(channel_layer.group_send)(str(request.user.pk), {
                     'type': 'new.message',
-                    'text': json.dumps({'type':'new_match', 'text':'ai facut match fraere'})
+                    'text': json.dumps({'type':'new_match', 'matched_with':user_action_receiver.pk})
                 })
                 async_to_sync(channel_layer.group_send)(str(user_action_receiver.pk), {
                     'type': 'new.message',
-                    'text': json.dumps({'type':'new_match', 'text':'ai facut match fraere'})
+                    'text': json.dumps({'type':'new_match', 'matched_with':request.user.pk})
                 })
             except IntegrityError:
                 return Response("Match entry already exists", status=status.HTTP_406_NOT_ACCEPTABLE)

@@ -70,7 +70,6 @@ class DiscoverScreen extends Component {
     }
 
     handleRight = (item) => {
-        // this.props.ws.send(JSON.stringify({'type': '__ping__'}));
         this.send_swipe({userId: item.userId, type: 'like'});
         console.log(this.get_matches());
         console.log("Liked", item.userId);

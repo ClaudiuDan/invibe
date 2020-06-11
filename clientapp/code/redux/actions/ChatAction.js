@@ -12,8 +12,6 @@ import ImageChatMessage from "../../chat/classes/messagesTypes/ImageChatMessage"
 import * as FileSystem from "expo-file-system";
 import {messageTypesForServer} from "../../chat/classes/messagesTypes/ChatMessageTypes";
 
-const WebSocketURL = 'wss://invibes.herokuapp.com/chat/';
-
 export const retrieveChatsList = () => dispatch => {
     ChatsList.retrieve().then(chats => {
             dispatch({

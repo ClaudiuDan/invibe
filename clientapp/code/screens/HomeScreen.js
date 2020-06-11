@@ -2,6 +2,7 @@ import React, {Component} from 'react';
 import {Button, View} from "react-native";
 import {connect} from "react-redux";
 import {retrieveChatsList} from "../redux/actions/ChatAction";
+import {retrieveMatchesList} from "../redux/actions/MatchAction";
 import {openWebSocket} from "../redux/actions/CommunicationAction";
 
 import {getProfile} from "../redux/actions/ProfileAction";
@@ -18,6 +19,7 @@ class HomeScreen extends Component {
 
     componentDidMount() {
         this.props.retrieveChatsList();
+        this.props.retrieveMatchesList();
         this.props.openWebSocket();
         this.props.getProfile(this.props.userId, false);
     }
@@ -51,4 +53,4 @@ const mapStateToProps = state => ({
     userId: state.auth.userId,
 });
 
-export default connect(mapStateToProps, {openWebSocket, retrieveChatsList, getProfile})(HomeScreen);
+export default connect(mapStateToProps, {openWebSocket, retrieveChatsList, getProfile, retrieveMatchesList})(HomeScreen);

@@ -17,7 +17,6 @@ from .models import Message, Chat, TextMessage, MessageTypes, ImageMessage, deco
 class ChatConsumer(WebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-#         async_to_sync(self.channel_layer.group_add)('match_updates_group', self.channel_name)
         self.receiver = ""
 
     def receive(self, text_data=None, bytes_data=None):
