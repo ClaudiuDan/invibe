@@ -18,7 +18,7 @@ export default class MatchesList {
 
         saveToLocalStorage(
             MatchesList.getUniqueKey(),
-            keysDic,
+            this._matchesInfo,
             "Could not save matchesList to local storage."
         );
     }
@@ -34,6 +34,9 @@ export default class MatchesList {
         }
 
         return value;
+    }
+    get matchesInfo() {
+        return this._matchesInfo;
     }
 }
 

@@ -49,8 +49,8 @@ class HomeScreen extends Component {
 }
 
 const mapStateToProps = state => ({
-    webSocket: state.chat.webSocket,
     userId: state.auth.userId,
+    matchesList: state.match.matchesList,
 });
 
 export default connect(mapStateToProps, {openWebSocket, retrieveChatsList, getProfile, retrieveMatchesList})(HomeScreen);

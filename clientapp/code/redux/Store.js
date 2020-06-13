@@ -20,6 +20,10 @@ const initialState = {
 
     profile: {
         profiles: {} // UserId -> UserProfile
+    },
+
+    match: {
+      matchesList: null
     }
 };
 

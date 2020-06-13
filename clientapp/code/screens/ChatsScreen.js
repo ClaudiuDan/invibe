@@ -75,6 +75,8 @@ class ChatsScreen extends Component {
 
     render() {
         const {modalVisible, chatsList} = this.state;
+        let matchesList = this.props.matchesList
+        console.log(matchesList.matchesInfo)
         return (
             <View>
                 {this.getModalView(modalVisible)}
@@ -87,6 +89,9 @@ class ChatsScreen extends Component {
                 />
                 <ScrollView style={styles.scrollView}>
                     {this.getChatsListComponent(chatsList.chatsInfo)}
+                </ScrollView>
+                <ScrollView style={styles.scrollView}>
+                    {this.getMatchesListComponent(matchesList.matchesInfo)}
                 </ScrollView>
                 <Button
                     title="Go back"
@@ -115,6 +120,7 @@ class ChatsScreen extends Component {
                     {/*    {"Chat with " + chatInfo.receiver}*/}
                     {/*</Text>*/}
                     <ChatHeader receiverId={chatInfo.receiver}
+                                //TODO: remove this?
                                 navigation={this.props.navigation}
                                 onPress={() => this.props.navigation.navigate('Chat', {receiverId: chatInfo.receiver})}
                     />
@@ -124,6 +130,32 @@ class ChatsScreen extends Component {
         )));
 
         return chatsEntries;
+    }
+    getMatchesListComponent(matchesInfo) {
+        const matchesEntries = [];
+        const matchesAsList = [];
+        for (const receiver in matchesInfo) {
+            console.log("aici ", matchesInfo[receiver].receiver)
+            matchesAsList.push(matchesInfo[receiver]);
+        }
+        matchesAsList.forEach((matchInfo) => matchesEntries.push((
+            //TODO: change TouchableWithoutFeedback, docs suggest to use it only if we really need to
+            <TouchableWithoutFeedback
+                key={matchInfo.receiver}
+                style={styles.chatTouchable}
+                onPress={() => this.props.navigation.push("Profile", {userId: matchInfo.receiver})}
+            >
+                <View style={styles.chatView}>
+                    <ChatHeader receiverId={matchInfo.receiver}
+                                navigation={this.props.navigation}
+                                onPress={() => this.props.navigation.push("Profile", {userId: matchInfo.receiver})}
+                    />
+                    <View style={{paddingBottom: 10}}/>
+                </View>
+            </TouchableWithoutFeedback>
+        )));
+
+        return matchesEntries;
     }
 
     // Shows the new chat dialog
@@ -179,6 +211,8 @@ class ChatsScreen extends Component {
 
 const mapStateToProps = state => ({
     chatsList: state.chat.chatsList,
+    matchesList: state.match.matchesList,
+    //TODO: do we need this?
     ws: state.chat.webSocket,
 });
 

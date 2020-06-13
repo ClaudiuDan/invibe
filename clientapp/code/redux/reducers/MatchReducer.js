@@ -2,18 +2,16 @@ import {
     ADD_MATCH, SET_MATCHESLIST,
 } from "../actions/Types";
 import MatchesList from "../../match/classes/MatchesList";
-import ChatsList from "../../chat/classes/ChatsList";
-
+import MatchInfo from "../../match/classes/MatchInfo";
 function matchReducer(state = {}, action) {
-    // TODO: change access to private data member
-    const matchesInfo = state.matchesList ? state.matchesList._matchesInfo : null;
+    const matchesInfo = state.matchesList ? state.matchesList.matchesInfo : null;
     switch (action.type) {
         case ADD_MATCH:
-            let matched_with = action.payload.match;
+            let receiver = action.payload.match;
             let newMatchesList =
                 new MatchesList({
                     ...matchesInfo,
-                    [matched_with]: matched_with
+                    [receiver]: new MatchInfo(receiver)
                 }, true);
             console.log("in add match reducer ", newMatchesList);
             return {
@@ -21,11 +19,9 @@ function matchReducer(state = {}, action) {
                 matchesList: newMatchesList
             }
         case SET_MATCHESLIST:
-
             if (!action.payload.matches) {
                 return state;
             }
-
             return {
                 ...state,
                 matchesList: new MatchesList(action.payload.matches, !action.payload.isRetrieve)
