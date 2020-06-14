@@ -72,9 +72,9 @@ class ChatsScreen extends Component {
             },
         );
     };
-
     render() {
         const {modalVisible, chatsList} = this.state;
+        //TODO bind to state
         let matchesList = this.props.matchesList
         console.log(matchesList.matchesInfo)
         return (
@@ -131,14 +131,14 @@ class ChatsScreen extends Component {
 
         return chatsEntries;
     }
+
     getMatchesListComponent(matchesInfo) {
         const matchesEntries = [];
         const matchesAsList = [];
-        for (const receiver in matchesInfo) {
-            console.log("aici ", matchesInfo[receiver].receiver)
-            matchesAsList.push(matchesInfo[receiver]);
+        for (const matchInfo in matchesInfo) {
+            matchesAsList.push(matchesInfo[matchInfo]);
         }
-        matchesAsList.forEach((matchInfo) => matchesEntries.push((
+        matchesAsList.sort((c1, c2) => c2.ord - c1.ord).forEach((matchInfo) => matchesEntries.push((
             //TODO: change TouchableWithoutFeedback, docs suggest to use it only if we really need to
             <TouchableWithoutFeedback
                 key={matchInfo.receiver}
