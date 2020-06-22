@@ -20,6 +20,7 @@ const getMatchesListFromLocal = async () => {
     return res
 };
 
+//TODO: replace then with await to make this more elegant
 export const getMatchesList = () => dispatch => {
     getMatchesListFromLocal()
         .then(retrievedMatches => {
