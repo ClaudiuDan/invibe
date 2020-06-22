@@ -34,7 +34,7 @@ export const getMatchesList = () => dispatch => {
                             return state
                         })
                 })
-                .catch(err => {
+                .catch(error => {
                     console.log ("Could not retrieve matches from server", error)
                     dispatch(setMatchesListLocal(match))
                 })
