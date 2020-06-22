@@ -34,6 +34,7 @@ class ChatsScreen extends Component {
     static getDerivedStateFromProps(nextProps) {
         return {
             chatsList: nextProps.chatsList,
+            matchesList: nextProps.matchesList,
         }
     }
 
@@ -42,6 +43,11 @@ class ChatsScreen extends Component {
         if (this.props.chatsList !== this.state.chatsList) {
             this.setState({
                 chatsList: this.props.chatsList,
+            })
+        }
+        if (this.props.matchesList !== this.state.matchesList) {
+            this.setState({
+                matchesList: this.props.matchesList,
             })
         }
     }
@@ -73,10 +79,7 @@ class ChatsScreen extends Component {
         );
     };
     render() {
-        const {modalVisible, chatsList} = this.state;
-        //TODO bind to state
-        let matchesList = this.props.matchesList
-        console.log(matchesList.matchesInfo)
+        const {modalVisible, chatsList, matchesList} = this.state;
         return (
             <View>
                 {this.getModalView(modalVisible)}

@@ -23,15 +23,20 @@ class MatchesApiView(APIView):
     def get(self, request):
         matches1 = request.user.user_matched_1.all().values('user_2')
         matches2 = request.user.user_matched_2.all().values('user_1')
-        response = []
+#         response = []
+#         for match in matches1:
+#             response.append({
+#                 "user_id": match['user_2']
+#             })
+#         for match in matches2:
+#             response.append({
+#                 "user_id": match['user_1']
+#             })
+        response = {}
         for match in matches1:
-            response.append({
-                "user_id": match['user_2']
-            })
+            response[match['user_2']] = match['user_2']
         for match in matches2:
-            response.append({
-                "user_id": match['user_1']
-            })
+            response[match['user_1']] = match['user_1']
         return Response(json.dumps(response, cls=DjangoJSONEncoder), status=status.HTTP_200_OK)
 
     def post(self, request):

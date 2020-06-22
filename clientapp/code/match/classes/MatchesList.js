@@ -1,5 +1,4 @@
 import {retrieveFromLocalStorage, saveToLocalStorage} from "../../Utils/Utils";
-import ChatInfo from "../../chat/classes/ChatInfo";
 import MatchInfo from "./MatchInfo";
 export default class MatchesList {
     // TODO: a lot of duplicate code for retrieving/storing, maybe we can do better
@@ -17,6 +16,7 @@ export default class MatchesList {
     save() {
         const keysDic = {...this.matchesInfo};
 
+        // individual matches need to be saved locally too
         for (const receiver in keysDic) {
             keysDic[receiver] = keysDic[receiver].getUniqueKey();
         }
@@ -37,6 +37,7 @@ export default class MatchesList {
         }
         const res = {}
         for (const receiver in value) {
+            // is this necessary?
             if (value[receiver]) {
                 const matchInfo =  await MatchInfo.retrieve(value[receiver]);
                 if (matchInfo) {
@@ -47,6 +48,24 @@ export default class MatchesList {
 
         return res;
     }
+
+    static async delete () {
+        const value = await retrieveFromLocalStorage(
+            MatchesList.getUniqueKey(),
+            "Could not retrieve matchestList from local storage."
+        );
+        if (!value) {
+            return {};
+        }
+        console.log(value)
+        for (const receiver in value) {
+            if (value[receiver]) {
+                console.log(value[receiver])
+                await MatchInfo.deleteItem(value[receiver])
+            }
+        }
+    }
+
     get matchesInfo() {
         return this._matchesInfo;
     }

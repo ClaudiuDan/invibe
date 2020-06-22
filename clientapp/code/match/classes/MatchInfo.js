@@ -1,4 +1,4 @@
-import {retrieveFromLocalStorage, saveToLocalStorage} from "../../Utils/Utils";
+import {retrieveFromLocalStorage, saveToLocalStorage, removeItemValue} from "../../Utils/Utils";
 
 export default class MatchInfo {
 
@@ -34,6 +34,13 @@ export default class MatchInfo {
             return null;
         }
         return MatchInfo.instanceFromDic(value);
+    }
+
+    static async deleteItem(key) {
+        const result = await removeItemValue(key)
+        if (!result) {
+            console.log("Item with key ", key, " could not be deleted.")
+        }
     }
 
     getDictionary() {

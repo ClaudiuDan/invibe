@@ -42,6 +42,15 @@ export const retrieveFromLocalStorage = async (key, errText) => {
     return null;
 };
 
+export const removeItemValue = async (key) => {
+    try {
+        await AsyncStorage.removeItem(key);
+        return true;
+    }
+    catch(exception) {
+        return false;
+    }
+};
 
 // isLessThanFun return true if a[i] < b[j]
 export const mergeSortedArrays = (a, b, isLessThanFun) => {
